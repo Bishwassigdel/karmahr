@@ -17,8 +17,9 @@ lives in shared `provider` state (or static demo data): it resets on app
 restart, and logging out explicitly wipes every provider's session data too
 (attendance, leave/HR requests, kudos, anonymous feedback, notifications) and
 re-locks the app, so the next person signing in on the same device never
-inherits the previous user's data. Login is a placeholder: entering any Staff
-ID/password takes you straight into the app.
+inherits the previous user's data. Login is a placeholder: any Staff
+ID/password works, and a **demo role picker** (Employee / Manager / HR) on
+the login screen decides which portal opens.
 
 ## Features
 
@@ -133,6 +134,38 @@ submitted requests into balances. "Days worked" is **estimated from the
 calendar** (no real attendance history yet) — the one function a backend
 should replace.
 
+### Portals and roles
+
+KarmaHR is one app with three portals, chosen by the signed-in role
+(`UserRole` in `lib/state/auth_state.dart`):
+
+| Role | Portal | Status |
+|---|---|---|
+| Employee | The employee app (Home, Leave, Time, Events, Apps) | Done |
+| Manager | The employee app **plus a Team tab** (managers still take leave and check in) | Team tab is a placeholder; approvals come next |
+| HR | The HR portal (`lib/screens/hr/`), planned with a wide web/tablet layout | Placeholder |
+
+`portalHomeFor(role)` in `lib/screens/portal_home.dart` maps a role to its
+first screen. `confirmLogout()` in `lib/screens/logout.dart` is the one
+logout for every portal. The role picker on the login screen is **demo
+only**: once the backend exists, the role comes from the login response.
+
+### Translations (English ⇄ नेपाली)
+
+Text lives in `lib/l10n/app_en.arb` (English, the template) and
+`lib/l10n/app_ne.arb` (Nepali). Users switch in **Settings → Language**,
+and the choice is kept across launches (`LocaleState`).
+
+To add a string:
+1. Add the key to **both** `.arb` files.
+2. Run `flutter gen-l10n` (or just `flutter run`, which runs it too).
+3. Use it: `Text(context.l10n.myKey)`. Import `lib/l10n/l10n.dart`.
+
+Translated so far: login, tab bar, Settings, logout, and the Manager/HR
+portal screens. **Every new screen is written with translations from the
+start**; the older employee screens are converted gradually, and until
+then show English.
+
 ### Single sources of truth
 
 - **`lib/data/current_employee.dart`** — the employee's details and salary
@@ -172,19 +205,23 @@ should replace.
 flutter test
 ```
 
-236 tests:
+304 tests:
 
 - **Unit** — Nepal rules (fiscal year, leave policy, tax + caps, leave
   planner, bonus, overtime), PDFs, state classes.
 - **Screen** — individual widget tests.
 - **QA smoke test** (`test/qa/all_screens_smoke_test.dart`) — renders
   every screen with the real providers at 320pt (light), 320pt (dark,
-  130% text) and 430pt, on a tall viewport so every list row is built.
+  130% text), 430pt, and 320pt in Nepali, on a tall viewport so every
+  list row is built.
   Flutter's test font draws characters about twice as wide as San
   Francisco, so this is a stress test for large accessibility text sizes.
 - **Feature flows** (`test/qa/feature_flows_test.dart`) — expense
   validation, overtime limit block, safety check-in, pulse, RSVP, leave
   planner, Dashboard attention card, startup reminders, and logout reset.
+- **Roles and language** (`test/qa/roles_and_language_test.dart`) — each
+  demo role opens the right portal, logout signs out, and switching to
+  नेपाली changes the text.
 
 **CI:** `.github/workflows/ci.yml` runs `flutter analyze` and `flutter test`
 on GitHub Actions for every push and pull request to `development` or
@@ -197,6 +234,8 @@ timezone note above).
 .github/workflows/ci.yml               # analyze + tests on every push/PR
 lib/
 ├── main.dart                          # appProviders(): one provider list
+├── l10n/                              # app_en.arb + app_ne.arb (+ generated)
+│   └── l10n.dart                      # context.l10n helper
 ├── data/                              # demo data (replaced by backend later)
 │   ├── calendar_data.dart             # BS calendar markers, holidays
 │   ├── current_employee.dart          # employee details + salary, one place
@@ -215,6 +254,8 @@ lib/
 │   └── pdf_documents.dart             # payslip + salary certificate PDFs
 ├── state/                             # Provider ChangeNotifiers
 │   ├── session.dart                   # resetSession() on logout
+│   ├── auth_state.dart                # signed-in role (UserRole)
+│   ├── locale_state.dart              # English / नेपाली
 │   ├── app_lock_state.dart, theme_state.dart
 │   ├── attendance_state.dart, attendance_actions.dart
 │   ├── leave_state.dart, leave_balance_state.dart
@@ -228,7 +269,10 @@ lib/
 ├── theme/
 │   └── app_colors.dart
 └── screens/
-    ├── welcome_screen.dart, login_screen.dart
+    ├── welcome_screen.dart, login_screen.dart   # + demo role picker
+    ├── portal_home.dart, logout.dart  # role → portal; shared logout
+    ├── manager/team_screen.dart       # Manager portal (Team tab)
+    ├── hr/hr_portal_screen.dart       # HR portal
     ├── app_lock_gate.dart, app_lock_screen.dart
     ├── main_nav_screen.dart           # bottom tab bar hub
     ├── dashboard_screen.dart, apps_screen.dart, insights_screen.dart
@@ -259,19 +303,18 @@ test/
 
 ## Roadmap / what's next
 
-Remaining ideas, frontend-only:
+1. **Manager portal** — approve/reject leave, expenses, overtime and HR
+   requests; team attendance; team leave calendar; team goals.
+2. **HR/Admin portal** (web/tablet layout) — employee records, leave and
+   holiday policy setup, payroll runs, notices/events publishing, reports.
+3. Translate the remaining employee screens to Nepali.
+4. Optional/floating holidays and multi-day Dashain/Tihar in the holiday
+   calendar, so bridge suggestions have more to work with.
+5. AI features — receipt OCR, voice-filled forms, an HR assistant.
 
-1. Optional/floating holidays (province/community-specific), and a fuller
-   holiday calendar (multi-day Dashain/Tihar) so bridge suggestions have
-   more to work with.
-2. Full English ⇄ नेपाली localization (`flutter_localizations`, `intl`) —
-   the layouts are already stress-tested for longer text.
-3. AI features — receipt/document OCR (on-device), voice-filled forms, and
-   an HR assistant chatbot grounded in the app's own data.
-
-Then: **backend integration** — replacing the demo `fetch*` functions,
-`simulatedRefresh()`, the calendar-based working-days estimate, and the
-hardcoded current employee.
+Then: **backend integration** — real login (the role comes from the
+server), replacing the demo `fetch*` functions, `simulatedRefresh()`, the
+calendar-based working-days estimate, and the hardcoded current employee.
 
 ## Getting started
 

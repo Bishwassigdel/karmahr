@@ -15,7 +15,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:nepali_utils/nepali_utils.dart';
 import 'package:provider/provider.dart';
 
-import 'app_lock_gate.dart';
+import '../l10n/l10n.dart';
+import 'logout.dart';
 import 'apps/attendance/attendance_module_screen.dart';
 import 'apps/tasks/task_models.dart';
 import 'apps/tasks/tasks_module_screen.dart';
@@ -36,7 +37,6 @@ import 'safety_checkin_screen.dart';
 import 'settings_screen.dart';
 import 'team_availability_screen.dart';
 import 'training_screen.dart';
-import 'welcome_screen.dart';
 import '../data/calendar_data.dart';
 import '../data/current_employee.dart';
 import '../data/team_data.dart';
@@ -48,7 +48,6 @@ import '../state/leave_balance_state.dart';
 import '../state/leave_state.dart';
 import '../state/onboarding_state.dart';
 import '../state/safety_state.dart';
-import '../state/session.dart';
 import '../state/survey_state.dart';
 import '../state/training_state.dart';
 import '../theme/app_colors.dart';
@@ -95,60 +94,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 CupertinoPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
-            child: const Text('Settings'),
+            child: Text(context.l10n.settingsTitle),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () {
               Navigator.pop(sheetContext);
-              _confirmLogout(context);
+              confirmLogout(context);
             },
-            child: const Text('Logout'),
+            child: Text(context.l10n.logOut),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(sheetContext),
           child: const Text('Cancel'),
         ),
-      ),
-    );
-  }
-
-  void _confirmLogout(BuildContext context) {
-    showCupertinoDialog<void>(
-      context: context,
-      builder: (dialogContext) => CupertinoAlertDialog(
-        title: const Text('Log Out'),
-        content: const Text('Are you sure you want to log out?'),
-        actions: [
-          CupertinoDialogAction(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          CupertinoDialogAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              // Wipe every piece of this user's data and re-lock BEFORE
-              // navigating away. Providers live above the navigator, so
-              // they survive pushAndRemoveUntil — see session.dart.
-              resetSession(dialogContext);
-
-              // AppLockGate, not a bare WelcomeScreen: pushAndRemoveUntil
-              // replaces the ENTIRE stack, so re-entering any other way
-              // would bypass the re-lock above.
-              Navigator.of(
-                dialogContext,
-                rootNavigator: true,
-              ).pushAndRemoveUntil(
-                CupertinoPageRoute(
-                  builder: (_) => const AppLockGate(child: WelcomeScreen()),
-                ),
-                (route) => false,
-              );
-            },
-            child: const Text('Log Out'),
-          ),
-        ],
       ),
     );
   }

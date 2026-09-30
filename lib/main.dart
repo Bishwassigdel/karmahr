@@ -1,13 +1,17 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import 'l10n/app_localizations.dart';
 import 'screens/app_lock_gate.dart';
 import 'screens/welcome_screen.dart';
 import 'state/app_lock_state.dart';
+import 'state/auth_state.dart';
 import 'state/attendance_state.dart';
 import 'state/leave_balance_state.dart';
 import 'state/leave_state.dart';
+import 'state/locale_state.dart';
 import 'state/notification_state.dart';
 import 'state/push_notification_state.dart';
 import 'state/theme_state.dart';
@@ -35,6 +39,8 @@ void main() {
 /// a hand-picked subset can pass while the real app crashes on a missing
 /// provider, or the other way round.
 List<SingleChildWidget> appProviders() => [
+  ChangeNotifierProvider(create: (context) => AuthState()),
+  ChangeNotifierProvider(create: (context) => LocaleState()),
   ChangeNotifierProvider(create: (context) => AppLockState()),
   ChangeNotifierProvider(create: (context) => AttendanceState()),
   ChangeNotifierProvider(create: (context) => ThemeState()),
@@ -69,8 +75,8 @@ class MyApp extends StatelessWidget {
       providers: appProviders(),
       // Consumer rebuilds just this part of the tree whenever the user
       // changes their theme choice in Settings.
-      child: Consumer<ThemeState>(
-        builder: (context, themeState, _) {
+      child: Consumer2<ThemeState, LocaleState>(
+        builder: (context, themeState, localeState, _) {
           // "System" means follow the phone's own Light/Dark setting —
           // otherwise, the user's manual pick always wins, no matter what
           // the phone is set to.
@@ -92,6 +98,18 @@ class MyApp extends StatelessWidget {
           return CupertinoApp(
             debugShowCheckedModeBanner: false,
             title: 'KarmaHR',
+
+            locale: localeState.language.locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            // GlobalMaterialLocalizations too: some shared widgets (text
+            // selection menus) look up Material strings even in a
+            // Cupertino app.
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
 
             theme: CupertinoThemeData(
               brightness: resolvedBrightness,

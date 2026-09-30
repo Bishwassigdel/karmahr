@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 
 import 'app_lock_state.dart';
 import 'attendance_state.dart';
+import 'auth_state.dart';
 import 'document_wallet_state.dart';
 import 'emergency_info_state.dart';
 import 'event_rsvp_state.dart';
@@ -43,6 +44,7 @@ void resetSession(BuildContext context) {
   context.read<SurveyState>().reset();
   context.read<SafetyState>().reset();
   context.read<EventRsvpState>().reset();
+  context.read<AuthState>().signOut();
   // Last: re-lock, so the next person has to authenticate before
   // reaching anything — even without the app ever being fully closed.
   context.read<AppLockState>().lock();
