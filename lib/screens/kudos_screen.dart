@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../data/current_employee.dart';
 import '../state/kudos_state.dart';
 import '../theme/app_colors.dart';
 import 'give_kudos_screen.dart';
@@ -213,7 +214,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
 
     // "Bishwas Sigdel" stands in for the logged-in user, same
     // assumption used everywhere else without real login yet.
-    context.read<KudosState>().addComment(widget.post, 'Bishwas Sigdel', text);
+    context.read<KudosState>().addComment(widget.post, currentEmployee.name, text);
     _controller.clear();
   }
 

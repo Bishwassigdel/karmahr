@@ -12,6 +12,11 @@ class AsyncStateView extends StatelessWidget {
   final String errorMessage;
   final VoidCallback? onRetry;
 
+  // Optional content-shaped placeholder (e.g. SkeletonList) shown while
+  // loading instead of the bare spinner. Optional so every existing
+  // caller keeps working unchanged.
+  final Widget? loadingPlaceholder;
+
   const AsyncStateView({
     super.key,
     required this.state,
@@ -19,12 +24,14 @@ class AsyncStateView extends StatelessWidget {
     this.emptyMessage = 'Nothing to show yet.',
     this.errorMessage = 'Something went wrong.',
     this.onRetry,
+    this.loadingPlaceholder,
   });
 
   @override
   Widget build(BuildContext context) {
     switch (state) {
       case LoadState.loading:
+        if (loadingPlaceholder != null) return loadingPlaceholder!;
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 60),
           child: Center(child: CupertinoActivityIndicator(radius: 14)),
@@ -37,10 +44,7 @@ class AsyncStateView extends StatelessWidget {
           onAction: onRetry,
         );
       case LoadState.empty:
-        return _StatusMessage(
-          icon: CupertinoIcons.tray,
-          message: emptyMessage,
-        );
+        return _StatusMessage(icon: CupertinoIcons.tray, message: emptyMessage);
       case LoadState.ready:
         return child;
     }

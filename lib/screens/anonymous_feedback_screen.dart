@@ -49,6 +49,13 @@ class _AnonymousFeedbackScreenState extends State<AnonymousFeedbackScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Tracks what the wheel is currently showing, WITHOUT committing
+        // it yet — same pattern the date pickers in this app already use.
+        // Starting it at selectedIndex is what makes "open the picker and
+        // tap Done immediately" select the item that was visibly centered,
+        // instead of selecting nothing at all.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -60,7 +67,14 @@ class _AnonymousFeedbackScreenState extends State<AnonymousFeedbackScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    // Done is the ONLY thing that commits — dismissing the
+                    // sheet by tapping outside now correctly cancels.
+                    onPressed: () {
+                      setState(() {
+                        _selectedType = FeedbackType.values[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -71,14 +85,7 @@ class _AnonymousFeedbackScreenState extends State<AnonymousFeedbackScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  // Fires continuously as the wheel scrolls — setState
-                  // here means the field behind the sheet updates live,
-                  // even before the user taps "Done".
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedType = FeedbackType.values[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: FeedbackType.values.map((type) {
                     return Center(child: Text(feedbackTypeLabel(type)));
                   }).toList(),

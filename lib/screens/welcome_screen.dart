@@ -280,9 +280,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                           const SizedBox(height: 14),
 
-                          Center(
+                          Padding(
+                            // Horizontal padding, not Center+Row: on a
+                            // narrower phone width this line doesn't fit
+                            // on one row alongside the icon (a real
+                            // overflow, not just a simulator artifact) —
+                            // Flexible lets it wrap to a second centered
+                            // line instead of clipping off the edge.
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 Icon(
                                   CupertinoIcons.lock_shield_fill,
@@ -291,13 +299,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                       .resolveFrom(context),
                                 ),
                                 const SizedBox(width: 6),
-                                Text(
-                                  'Protected & confidential · Authorized staff only',
-                                  style: TextStyle(
-                                    fontSize: 11.5,
-                                    color: CupertinoColors.systemGrey2
-                                        .resolveFrom(context),
-                                    fontWeight: FontWeight.w500,
+                                Flexible(
+                                  child: Text(
+                                    'Protected & confidential · Authorized staff only',
+                                    textAlign: TextAlign.center,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 11.5,
+                                      color: CupertinoColors.systemGrey2
+                                          .resolveFrom(context),
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],

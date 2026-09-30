@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../state/leave_state.dart';
+import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
 
 // 2. LEAVE REQUEST MODEL
@@ -18,7 +19,12 @@ import '../theme/app_colors.dart';
 //
 // This screen allows an employee to apply for leave.
 class LeaveScreen extends StatefulWidget {
-  const LeaveScreen({super.key});
+  // Optional pre-fill — the Leave Planner opens this form with the dates
+  // it just calculated, so the employee doesn't re-enter them.
+  final DateTime? initialStartDate;
+  final DateTime? initialEndDate;
+
+  const LeaveScreen({super.key, this.initialStartDate, this.initialEndDate});
 
   @override
   State<LeaveScreen> createState() => _LeaveScreenState();
@@ -28,6 +34,13 @@ class LeaveScreen extends StatefulWidget {
 //
 // Contains the changing data and logic for the Leave screen.
 class _LeaveScreenState extends State<LeaveScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _startDate = widget.initialStartDate;
+    _endDate = widget.initialEndDate;
+  }
+
   // 5. REASON CONTROLLER
   //
   // Controller used to read the reason entered by the employee.
@@ -195,6 +208,11 @@ class _LeaveScreenState extends State<LeaveScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — starting this at selectedIndex is what
+        // makes "open the picker and tap Done immediately" select the
+        // item that was visibly centered, instead of selecting nothing.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -208,6 +226,9 @@ class _LeaveScreenState extends State<LeaveScreen> {
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     onPressed: () {
+                      setState(() {
+                        _selectedLeaveType = _leaveTypes[pendingIndex];
+                      });
                       Navigator.pop(context);
                     },
                     child: const Text('Done'),
@@ -222,11 +243,7 @@ class _LeaveScreenState extends State<LeaveScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedLeaveType = _leaveTypes[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: _leaveTypes.map((leaveType) {
                     return Center(child: Text(leaveType));
                   }).toList(),
@@ -711,15 +728,19 @@ class _LeaveScreenState extends State<LeaveScreen> {
         durationType: _selectedDurationType,
         startDate: _startDate!,
         endDate: _endDate ?? _startDate!,
-        leaveHours: _selectedDurationType == 'Hours Leave'
-            ? _leaveHours
-            : null,
+        leaveHours: _selectedDurationType == 'Hours Leave' ? _leaveHours : null,
         leaveStartTime: _selectedDurationType == 'Hours Leave'
             ? _leaveStartTime
             : null,
         reason: _reasonController.text.trim(),
         status: LeaveRequestStatus.pending,
       ),
+    );
+    notifyUser(
+      context,
+      kind: AppNotificationKind.leave,
+      title: '$_selectedLeaveType request submitted',
+      body: 'Your request is pending approval from your manager.',
     );
 
     // Reset the form. This part is still local UI state (what's

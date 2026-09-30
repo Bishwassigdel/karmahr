@@ -98,8 +98,7 @@ Future<List<TaskItem>> fetchMyTasks() async {
     TaskItem(
       employeeId: employeeId,
       title: 'Complete KarmaHR Onboarding Module',
-      description:
-          'Finish the remaining onboarding training videos and quiz.',
+      description: 'Finish the remaining onboarding training videos and quiz.',
       status: TaskStatus.inProgress,
       priority: TaskPriority.medium,
       dueDate: today.add(const Duration(days: 5)),

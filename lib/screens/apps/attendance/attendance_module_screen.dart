@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../../../state/attendance_actions.dart';
 import '../../../state/attendance_state.dart';
 import '../../../theme/app_colors.dart';
 import '../widgets/async_state_view.dart';
+import '../widgets/refreshable_list_view.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/stat_tile.dart';
 import '../widgets/status_badge.dart';
 import 'attendance_models.dart';
@@ -12,8 +15,7 @@ class AttendanceModuleScreen extends StatefulWidget {
   const AttendanceModuleScreen({super.key});
 
   @override
-  State<AttendanceModuleScreen> createState() =>
-      _AttendanceModuleScreenState();
+  State<AttendanceModuleScreen> createState() => _AttendanceModuleScreenState();
 }
 
 class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
@@ -26,8 +28,11 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
     _load();
   }
 
-  Future<void> _load() async {
-    setState(() => _loadState = LoadState.loading);
+  // showSkeleton: false on pull-to-refresh — the pull spinner already
+  // says "loading", so the existing list stays on screen until the new
+  // data lands instead of flashing back to skeleton cards.
+  Future<void> _load({bool showSkeleton = true}) async {
+    if (showSkeleton) setState(() => _loadState = LoadState.loading);
 
     try {
       final records = await fetchMyAttendanceHistory();
@@ -57,14 +62,14 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
     // current context before use in a plain Container/Text —
     // otherwise they silently always render their light-mode value,
     // even in Dark Mode.
-    final presentColor =
-        attendanceStatusColor(AttendanceDayStatus.present).resolveFrom(context);
-    final absentColor =
-        attendanceStatusColor(AttendanceDayStatus.absent).resolveFrom(context);
-    final lateColor =
-        attendanceStatusColor(AttendanceDayStatus.late).resolveFrom(context);
-    final halfDayColor =
-        attendanceStatusColor(AttendanceDayStatus.halfDay).resolveFrom(context);
+    final presentColor = attendanceStatusColor(AttendanceDayStatus.present)
+        .resolveFrom(context);
+    final absentColor = attendanceStatusColor(AttendanceDayStatus.absent)
+        .resolveFrom(context);
+    final lateColor = attendanceStatusColor(AttendanceDayStatus.late)
+        .resolveFrom(context);
+    final halfDayColor = attendanceStatusColor(AttendanceDayStatus.halfDay)
+        .resolveFrom(context);
 
     final presentCount = _history
         .where((r) => r.status == AttendanceDayStatus.present)
@@ -72,8 +77,9 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
     final absentCount = _history
         .where((r) => r.status == AttendanceDayStatus.absent)
         .length;
-    final lateCount =
-        _history.where((r) => r.status == AttendanceDayStatus.late).length;
+    final lateCount = _history
+        .where((r) => r.status == AttendanceDayStatus.late)
+        .length;
     final halfDayCount = _history
         .where((r) => r.status == AttendanceDayStatus.halfDay)
         .length;
@@ -81,7 +87,8 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(middle: Text('Attendance')),
       child: SafeArea(
-        child: ListView(
+        child: RefreshableListView(
+          onRefresh: () => _load(showSkeleton: false),
           padding: const EdgeInsets.all(20),
           children: [
             // TODAY CARD
@@ -104,24 +111,30 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _TodayStat(
-                        label: 'Check-In',
-                        value: attendance.checkInTime ?? '--:--',
-                        subtleTextColor: subtleTextColor,
+                      Expanded(
+                        child: _TodayStat(
+                          label: 'Check-In',
+                          value: attendance.checkInTime ?? '--:--',
+                          subtleTextColor: subtleTextColor,
+                        ),
                       ),
-                      _TodayStat(
-                        label: 'Check-Out',
-                        value: attendance.checkOutTime ?? '--:--',
-                        subtleTextColor: subtleTextColor,
+                      Expanded(
+                        child: _TodayStat(
+                          label: 'Check-Out',
+                          value: attendance.checkOutTime ?? '--:--',
+                          subtleTextColor: subtleTextColor,
+                        ),
                       ),
-                      _TodayStat(
-                        label: 'Status',
-                        value: attendance.isCheckedOut
-                            ? 'Done'
-                            : attendance.isCheckedIn
-                                ? 'Working'
-                                : 'Not In',
-                        subtleTextColor: subtleTextColor,
+                      Expanded(
+                        child: _TodayStat(
+                          label: 'Status',
+                          value: attendance.isCheckedOut
+                              ? 'Done'
+                              : attendance.isCheckedIn
+                              ? 'Working'
+                              : 'Not In',
+                          subtleTextColor: subtleTextColor,
+                        ),
                       ),
                     ],
                   ),
@@ -133,13 +146,7 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
                       borderRadius: BorderRadius.circular(12),
                       onPressed: attendance.isCheckedOut
                           ? null
-                          : () {
-                              if (attendance.isCheckedIn) {
-                                context.read<AttendanceState>().checkOut();
-                              } else {
-                                context.read<AttendanceState>().checkIn();
-                              }
-                            },
+                          : () => toggleAttendance(context),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -155,8 +162,8 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
                             attendance.isCheckedOut
                                 ? 'Checked Out'
                                 : attendance.isCheckedIn
-                                    ? 'Check Out'
-                                    : 'Check In',
+                                ? 'Check Out'
+                                : 'Check In',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               color: CupertinoColors.white,
@@ -235,6 +242,7 @@ class _AttendanceModuleScreenState extends State<AttendanceModuleScreen> {
               emptyMessage: 'No attendance records yet.',
               errorMessage: "Couldn't load your attendance history.",
               onRetry: _load,
+              loadingPlaceholder: const SkeletonList(itemHeight: 72),
               child: Column(
                 children: _history
                     .map(
@@ -271,9 +279,22 @@ class _TodayStat extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 12, color: subtleTextColor)),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 12, color: subtleTextColor),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        // Scales down rather than overflowing: three of these share a row.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+        ),
       ],
     );
   }
@@ -295,8 +316,18 @@ class _HistoryCard extends StatelessWidget {
   String _formatDate(DateTime date) {
     const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';
   }
@@ -324,7 +355,10 @@ class _HistoryCard extends StatelessWidget {
               children: [
                 Text(
                   _formatDate(record.date),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 StatusBadge(
@@ -335,19 +369,28 @@ class _HistoryCard extends StatelessWidget {
             ),
           ),
           if (record.checkInTime != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${record.checkInTime} – ${record.checkOutTime}',
-                  style: TextStyle(fontSize: 12.5, color: subtleTextColor),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  record.workingHours ?? '',
-                  style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
-                ),
-              ],
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${record.checkInTime} – ${record.checkOutTime}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: subtleTextColor),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    record.workingHours ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),

@@ -220,3 +220,30 @@ List<UpcomingMarker> getUpcomingMarkers({
 
   return results.take(limit).toList();
 }
+
+/// The public or company holiday on an AD date, or null for a normal day.
+/// Leave-day math (Leave Planner, the leave-balance estimate) only counts
+/// real holidays as free — "Present" or "My Leave" markers don't make a
+/// day free.
+String? holidayNameOn(DateTime adDate) {
+  final bs = adDate.toNepaliDateTime();
+  final marker = demoMarkers[markerKey(bs.year, bs.month, bs.day)];
+  if (marker == null) return null;
+  final isHoliday =
+      marker.type == MarkerType.governmentHoliday ||
+      marker.type == MarkerType.companyHoliday;
+  return isHoliday ? marker.title : null;
+}
+
+/// The next Vijaya Dashami (the main Dashain day) on the HR calendar, as
+/// an AD date — or null if the calendar doesn't have one coming up.
+DateTime? nextDashainDate() {
+  final upcoming = getUpcomingMarkers(
+    limit: 50,
+    typesFilter: {MarkerType.governmentHoliday},
+  );
+  for (final m in upcoming) {
+    if (m.marker.title.contains('दशैं')) return m.date.toDateTime();
+  }
+  return null;
+}

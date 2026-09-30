@@ -53,14 +53,21 @@ class AppModuleCard extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 3),
-            Text(
-              subtitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: subtleTextColor),
+            // Flexible so the subtitle gives up lines (down to one,
+            // ellipsized) on narrow screens or at large text sizes,
+            // instead of overflowing the fixed-height grid cell.
+            Flexible(
+              child: Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 12, color: subtleTextColor),
+              ),
             ),
           ],
         ),

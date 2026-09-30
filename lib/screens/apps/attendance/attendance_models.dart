@@ -93,7 +93,9 @@ Future<List<AttendanceRecord>> fetchMyAttendanceHistory() async {
     }
 
     final checkIn = status == AttendanceDayStatus.late ? '10:32 AM' : '9:55 AM';
-    final checkOut = status == AttendanceDayStatus.halfDay ? '1:15 PM' : '6:05 PM';
+    final checkOut = status == AttendanceDayStatus.halfDay
+        ? '1:15 PM'
+        : '6:05 PM';
     final hours = status == AttendanceDayStatus.halfDay ? '3h 20m' : '8h 10m';
 
     return AttendanceRecord(

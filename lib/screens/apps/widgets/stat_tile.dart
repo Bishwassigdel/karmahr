@@ -38,11 +38,17 @@ class StatTile extends StatelessWidget {
               children: [
                 Text(
                   '$count',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   label,
-                  style: const TextStyle(fontSize: 12, color: CupertinoColors.systemGrey),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: CupertinoColors.systemGrey,
+                  ),
                 ),
               ],
             ),

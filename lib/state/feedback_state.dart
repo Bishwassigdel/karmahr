@@ -120,4 +120,12 @@ class FeedbackState extends ChangeNotifier {
     // anywhere else in the app.
     notifyListeners();
   }
+
+  // Called on logout. Without this, the next person to sign in on this
+  // device would see the previous user's anonymous feedback — which
+  // defeats the entire point of the feature.
+  void clear() {
+    _items.clear();
+    notifyListeners();
+  }
 }

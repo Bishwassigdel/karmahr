@@ -273,32 +273,39 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
         color: isSelected ? AppColors.karmaRed : CupertinoColors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            NepaliUnicode.convert('$day'),
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: numberColor,
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          if (dotColor != null)
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: isSelected ? CupertinoColors.white : dotColor,
-                shape: BoxShape.circle,
+      // The number + marker dot scale down to fit the cell instead of
+      // overflowing it on narrow phones or at large text sizes.
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                NepaliUnicode.convert('$day'),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  color: numberColor,
+                ),
               ),
-            )
-          else
-            const SizedBox(height: 6),
-        ],
+
+              const SizedBox(height: 5),
+
+              if (dotColor != null)
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isSelected ? CupertinoColors.white : dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                )
+              else
+                const SizedBox(height: 6),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -327,9 +334,12 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  labelFor(type),
-                  style: TextStyle(fontSize: 12.5, color: subtleTextColor),
+                Flexible(
+                  child: Text(
+                    labelFor(type),
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12.5, color: subtleTextColor),
+                  ),
                 ),
               ],
             ),
@@ -401,12 +411,15 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
                     color: isActive ? color : color.withValues(alpha: 0.4),
                   ),
                   const SizedBox(width: 6),
-                  Text(
-                    labelFor(type),
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: isActive ? color : color.withValues(alpha: 0.4),
+                  Flexible(
+                    child: Text(
+                      labelFor(type),
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: isActive ? color : color.withValues(alpha: 0.4),
+                      ),
                     ),
                   ),
                 ],

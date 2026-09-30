@@ -2,8 +2,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/nepal/fiscal_year.dart';
+import '../state/leave_balance_state.dart';
 import '../state/leave_state.dart';
+import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
+import 'apps/widgets/progress_bar.dart';
 
 // 2. LEAVE REQUEST STATUS
 //
@@ -23,12 +27,11 @@ class LeaveBalancesScreen extends StatefulWidget {
 class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
   // 5. LEAVE BALANCE
   //
-  // Dummy balance for this employee. Only Total/Used are stored —
-  // Remaining is always derived from them, so the two can never drift
-  // out of sync with each other.
-  final int _totalLeaveDays = 18;
-  final int _usedLeaveDays = 6;
-  int get _remainingLeaveDays => _totalLeaveDays - _usedLeaveDays;
+  // No longer stored here as dummy fields — balances are now computed
+  // in build() by LeaveBalanceState from the Nepali fiscal year + the
+  // leave policy table (lib/domain/nepal/) + whatever's actually been
+  // submitted in LeaveState. See _homeLeaveCards / _allBalancesSection
+  // below.
 
   // 6. REASON CONTROLLER
   final _reasonController = TextEditingController();
@@ -142,6 +145,9 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see leave_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -153,7 +159,12 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedLeaveType = _leaveTypes[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -164,11 +175,7 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedLeaveType = _leaveTypes[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: _leaveTypes
                       .map((type) => Center(child: Text(type)))
                       .toList(),
@@ -566,15 +573,19 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
         durationType: _selectedDurationType,
         startDate: _startDate!,
         endDate: _endDate ?? _startDate!,
-        leaveHours: _selectedDurationType == 'Hours Leave'
-            ? _leaveHours
-            : null,
+        leaveHours: _selectedDurationType == 'Hours Leave' ? _leaveHours : null,
         leaveStartTime: _selectedDurationType == 'Hours Leave'
             ? _leaveStartTime
             : null,
         reason: _reasonController.text.trim(),
         status: LeaveRequestStatus.pending,
       ),
+    );
+    notifyUser(
+      context,
+      kind: AppNotificationKind.leave,
+      title: '$_selectedLeaveType request submitted',
+      body: 'Your request is pending approval from your manager.',
     );
 
     // Reset the form — still local UI state, so setState is still
@@ -627,6 +638,19 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
     // leave_screen.dart instead of here.
     final submittedRequests = context.watch<LeaveState>().requests;
 
+    // LeaveBalanceState itself never changes (it holds no fields), so
+    // context.read is enough — this screen already rebuilds whenever
+    // submittedRequests changes above.
+    final fiscalYear = NepaliFiscalYear.current();
+    final balances = context.read<LeaveBalanceState>().balancesFor(
+      submittedRequests,
+      fiscalYear: fiscalYear,
+    );
+    // The top summary row focuses on Home Leave — the one type every
+    // employee accrues continuously and is most likely to check day to
+    // day. The full per-type breakdown lives in _allBalancesSection below.
+    final homeLeave = balances.firstWhere((b) => b.type == 'Home Leave');
+
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
         middle: Text('Leave & Balances'),
@@ -637,13 +661,40 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 26. LEAVE BALANCE CARDS
+              // 26. LEAVE BALANCE CARDS — Home Leave, for the current
+              // Nepali fiscal year (Shrawan–Ashad), computed live by
+              // LeaveBalanceState rather than hardcoded.
+              // Wrap, not Row: at large text sizes the fiscal-year label
+              // moves to a second line instead of running off-screen.
+              Wrap(
+                spacing: 6,
+                children: [
+                  Text(
+                    'Home Leave',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(
+                        context,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '· FY ${fiscalYear.label}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CupertinoColors.systemGrey.resolveFrom(context),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
                     child: _balanceCard(
                       'Total',
-                      '$_totalLeaveDays Days',
+                      '${_formatDays(homeLeave.entitled)} Days',
                       karmaRed,
                       surfaceSecondary,
                     ),
@@ -652,7 +703,7 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
                   Expanded(
                     child: _balanceCard(
                       'Used',
-                      '$_usedLeaveDays Days',
+                      '${_formatDays(homeLeave.used)} Days',
                       CupertinoColors.systemOrange.resolveFrom(context),
                       surfaceSecondary,
                     ),
@@ -661,13 +712,21 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
                   Expanded(
                     child: _balanceCard(
                       'Remaining',
-                      '$_remainingLeaveDays Days',
+                      '${_formatDays(homeLeave.remaining)} Days',
                       CupertinoColors.systemGreen.resolveFrom(context),
                       surfaceSecondary,
                     ),
                   ),
                 ],
               ),
+
+              const SizedBox(height: 24),
+
+              // 26b. ALL LEAVE TYPES — the fuller breakdown Home Leave's
+              // 3 cards above don't have room for: every policy-tracked
+              // leave type, how much is left, and a warning if approved-
+              // but-unused days will lapse at this fiscal year's Ashad-end.
+              _allBalancesSection(balances, fiscalYear, surfaceSecondary),
 
               const SizedBox(height: 28),
 
@@ -908,6 +967,120 @@ class _LeaveBalancesScreenState extends State<LeaveBalancesScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // 29b. FORMAT A DAY COUNT FOR DISPLAY
+  //
+  // Accrual-based balances (Home Leave) are fractional day-by-day —
+  // showing "6.4 Days" reads oddly for a whole number, so this only
+  // keeps the decimal when the value actually isn't a whole day.
+  String _formatDays(double days) {
+    if (days.isInfinite) return 'Unlimited';
+    return days == days.roundToDouble()
+        ? days.toStringAsFixed(0)
+        : days.toStringAsFixed(1);
+  }
+
+  // 29c. ALL LEAVE TYPES SECTION
+  //
+  // One row per policy-tracked leave type, each with a progress bar and
+  // a "days will lapse" warning where relevant. Built from LeaveBalance
+  // objects that LeaveBalanceState computed in build() above — this
+  // method only lays them out, it does no balance math itself.
+  Widget _allBalancesSection(
+    List<LeaveBalance> balances,
+    NepaliFiscalYear fiscalYear,
+    Color background,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'All Leave Balances',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Unused balance beyond the carry-forward limit lapses at '
+            'Ashad-end (FY ${fiscalYear.label}).',
+            style: TextStyle(
+              fontSize: 12,
+              color: CupertinoColors.systemGrey.resolveFrom(context),
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (final balance in balances) ...[
+            _leaveTypeRow(balance),
+            if (balance != balances.last) const SizedBox(height: 14),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _leaveTypeRow(LeaveBalance balance) {
+    final atRisk = balance.atRiskOfLapsing;
+    final progress = balance.entitled.isInfinite || balance.entitled == 0
+        ? 0.0
+        : balance.used / balance.entitled;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                balance.type,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '${_formatDays(balance.remaining)} / '
+                '${_formatDays(balance.entitled)} left',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ProgressBar(
+          progress: progress,
+          color: balance.paid
+              ? AppColors.karmaRed
+              : CupertinoColors.systemGrey.resolveFrom(context),
+        ),
+        if (atRisk > 0) ...[
+          const SizedBox(height: 4),
+          Text(
+            '${_formatDays(atRisk)} day(s) will lapse if unused before '
+            'Ashad-end',
+            style: TextStyle(
+              fontSize: 11,
+              color: CupertinoColors.systemOrange.resolveFrom(context),
+            ),
+          ),
+        ],
+      ],
     );
   }
 

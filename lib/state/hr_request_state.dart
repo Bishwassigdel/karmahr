@@ -100,7 +100,9 @@ class HrRequest {
 // Shared Provider state — same ChangeNotifier pattern as LeaveState
 // and AttendanceState.
 class HrRequestState extends ChangeNotifier {
-  final List<HrRequest> _requests = [
+  final List<HrRequest> _requests = _seed();
+
+  static List<HrRequest> _seed() => [
     HrRequest(
       category: RequestCategory.timeCorrection,
       status: RequestStatus.approved,
@@ -121,6 +123,15 @@ class HrRequestState extends ChangeNotifier {
 
   void submitRequest(HrRequest request) {
     _requests.insert(0, request);
+    notifyListeners();
+  }
+
+  // Called on logout — drops everything submitted this session and
+  // returns to the demo seed, so the next user doesn't see it.
+  void reset() {
+    _requests
+      ..clear()
+      ..addAll(_seed());
     notifyListeners();
   }
 }

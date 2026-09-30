@@ -386,15 +386,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // Divider text
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'or continue with SSO',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: CupertinoColors.systemGrey,
-                        decoration: TextDecoration.none,
+                  // Divider text — Flexible so it can wrap instead of
+                  // pushing the divider lines off a narrow screen.
+                  const Flexible(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text(
+                        'or continue with SSO',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: CupertinoColors.systemGrey,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
                     ),
                   ),
@@ -444,20 +448,23 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(width: 8),
 
                       // SSO button text
-                      Text(
-                        'Continue with SSO',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimary,
-                          decoration: TextDecoration.none,
+                      Flexible(
+                        child: Text(
+                          'Continue with SSO',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: textPrimary,
+                            decoration: TextDecoration.none,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-
             ],
           ),
         ),

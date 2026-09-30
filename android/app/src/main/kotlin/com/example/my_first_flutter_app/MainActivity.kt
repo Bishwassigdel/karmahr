@@ -1,5 +1,7 @@
 package com.example.my_first_flutter_app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// local_auth requires a FragmentActivity (not a plain FlutterActivity) on
+// Android — the biometric prompt it shows is itself a DialogFragment.
+class MainActivity : FlutterFragmentActivity()

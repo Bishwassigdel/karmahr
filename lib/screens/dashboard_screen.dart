@@ -1,53 +1,98 @@
+// The employee's home screen. Ordered by urgency, top to bottom:
+//   1. Safety alert (only during an alert — it must never be scrolled past)
+//   2. Greeting + today (AD and BS dates)
+//   3. Attendance — the one thing everyone does every day
+//   4. Leave left + hours today, and quick actions
+//   5. Who's out today
+//   6. Weekly pulse (until answered)
+//   7. "Needs your attention" — overdue training, pending requests...
+//   8. Dashain countdown + estimated festival bonus (in season)
+//   9. Important tasks, and what's happening today
+// Every section that can be empty hides itself instead of showing a
+// blank box, so the dashboard stays short on a quiet day.
+
 import 'package:flutter/cupertino.dart';
+import 'package:nepali_utils/nepali_utils.dart';
 import 'package:provider/provider.dart';
 
-import 'profile_screen.dart';
-import 'leave_screen.dart';
+import 'app_lock_gate.dart';
 import 'apps/attendance/attendance_module_screen.dart';
 import 'apps/tasks/task_models.dart';
 import 'apps/tasks/tasks_module_screen.dart';
 import 'apps/widgets/progress_bar.dart';
 import 'apps/widgets/status_badge.dart';
-import 'notices_screen.dart';
+import 'apps/widgets/ui_kit.dart';
+import 'expense_claims_screen.dart';
+import 'leave_balances_screen.dart';
+import 'leave_planner_screen.dart';
+import 'leave_screen.dart';
+import 'my_requests_screen.dart';
+import 'notifications_screen.dart';
+import 'onboarding_screen.dart';
+import 'payslip_screen.dart';
+import 'profile_screen.dart';
+import 'pulse_survey_screen.dart';
+import 'safety_checkin_screen.dart';
 import 'settings_screen.dart';
+import 'team_availability_screen.dart';
+import 'training_screen.dart';
 import 'welcome_screen.dart';
+import '../data/calendar_data.dart';
+import '../data/current_employee.dart';
+import '../data/team_data.dart';
+import '../domain/nepal/festival_bonus.dart';
+import '../state/attendance_actions.dart';
 import '../state/attendance_state.dart';
+import '../state/expense_state.dart';
+import '../state/leave_balance_state.dart';
+import '../state/leave_state.dart';
+import '../state/onboarding_state.dart';
+import '../state/safety_state.dart';
+import '../state/session.dart';
+import '../state/survey_state.dart';
+import '../state/training_state.dart';
 import '../theme/app_colors.dart';
 
-// Back to StatelessWidget — this screen no longer holds its own
-// check-in state. That now lives in AttendanceState (shared via
-// Provider), so both Dashboard and the Attendance tab always agree.
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // Fetched ONCE for this screen's lifetime. It used to be
+  // `FutureBuilder(future: fetchMyTasks())` inside build(), which started
+  // a fresh 600ms fetch on EVERY rebuild — each check-in tap, each
+  // Provider change — making Important Tasks vanish and reappear.
+  late final Future<List<TaskItem>> _tasks = fetchMyTasks();
+
   // ============================================================
-  // MENU (replaces Material's Drawer — Cupertino has no drawer widget)
+  // MENU (Cupertino has no drawer widget)
   // ============================================================
   void _showMenu(BuildContext context) {
-    showCupertinoModalPopup(
+    showCupertinoModalPopup<void>(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: const Text('Bishwas Sigdel'),
-        message: const Text('Staff ID: MB-24071'),
+      builder: (sheetContext) => CupertinoActionSheet(
+        title: Text(currentEmployee.name),
+        message: Text('Staff ID: ${currentEmployee.employeeId}'),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               Navigator.push(
                 context,
-                CupertinoPageRoute(builder: (context) => const ProfileScreen()),
+                CupertinoPageRoute(builder: (_) => const ProfileScreen()),
               );
             },
             child: const Text('Profile'),
           ),
           CupertinoActionSheetAction(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(sheetContext);
               Navigator.push(
                 context,
-                CupertinoPageRoute(
-                  builder: (context) => const SettingsScreen(),
-                ),
+                CupertinoPageRoute(builder: (_) => const SettingsScreen()),
               );
             },
             child: const Text('Settings'),
@@ -55,48 +100,50 @@ class DashboardScreen extends StatelessWidget {
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () {
-              Navigator.pop(context); // close the action sheet first
+              Navigator.pop(sheetContext);
               _confirmLogout(context);
             },
             child: const Text('Logout'),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(sheetContext),
           child: const Text('Cancel'),
         ),
       ),
     );
   }
 
-  // ============================================================
-  // LOGOUT CONFIRMATION
-  // ============================================================
-  //
-  // A second confirmation before actually logging out — CupertinoAlertDialog
-  // is the standard iOS pattern for "are you sure?" moments, distinct from
-  // the CupertinoActionSheet used for the menu itself.
   void _confirmLogout(BuildContext context) {
-    showCupertinoDialog(
+    showCupertinoDialog<void>(
       context: context,
-      builder: (context) => CupertinoAlertDialog(
+      builder: (dialogContext) => CupertinoAlertDialog(
         title: const Text('Log Out'),
         content: const Text('Are you sure you want to log out?'),
         actions: [
           CupertinoDialogAction(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () {
-              // rootNavigator: true reaches past this tab's own Navigator
-              // (from CupertinoTabView) to the app's top-level Navigator —
-              // otherwise this would only pop within the Home tab's stack,
-              // not actually leave the tabbed section at all.
-              Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-                CupertinoPageRoute(builder: (context) => const WelcomeScreen()),
-                (route) => false, // clears the entire navigation history
+              // Wipe every piece of this user's data and re-lock BEFORE
+              // navigating away. Providers live above the navigator, so
+              // they survive pushAndRemoveUntil — see session.dart.
+              resetSession(dialogContext);
+
+              // AppLockGate, not a bare WelcomeScreen: pushAndRemoveUntil
+              // replaces the ENTIRE stack, so re-entering any other way
+              // would bypass the re-lock above.
+              Navigator.of(
+                dialogContext,
+                rootNavigator: true,
+              ).pushAndRemoveUntil(
+                CupertinoPageRoute(
+                  builder: (_) => const AppLockGate(child: WelcomeScreen()),
+                ),
+                (route) => false,
               );
             },
             child: const Text('Log Out'),
@@ -106,23 +153,14 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  // ============================================================
-  // MAIN BUILD METHOD
-  // ============================================================
+  void _open(Widget screen) {
+    Navigator.push(context, CupertinoPageRoute(builder: (_) => screen));
+  }
+
   @override
   Widget build(BuildContext context) {
-    const karmaRed = AppColors.karmaRed;
-
-    // CupertinoDynamicColor must be resolved against the current context
-    // before use in plain widgets (Container, BoxDecoration) — otherwise
-    // it silently always renders its light-mode value, even in Dark Mode.
-    final surface = AppColors.surface.resolveFrom(context);
-    final surfaceSecondary = AppColors.surfaceSecondary.resolveFrom(context);
-    final border = AppColors.border.resolveFrom(context);
-
-    // context.watch<AttendanceState>() = "give me the shared object, and
-    // rebuild this widget automatically whenever it calls notifyListeners()."
-    final attendance = context.watch<AttendanceState>();
+    final safetyActive = context.watch<SafetyState>().isActive;
+    final pulseDone = context.watch<SurveyState>().hasCheckedInThisWeek;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -133,325 +171,362 @@ class DashboardScreen extends StatelessWidget {
           onPressed: () => _showMenu(context),
           child: const Icon(CupertinoIcons.line_horizontal_3),
         ),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          minimumSize: Size.zero,
-          onPressed: () {
-            Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (context) => const NoticesScreen()),
-            );
-          },
-          child: const Icon(CupertinoIcons.bell),
+        trailing: const NotificationBell(),
+      ),
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            if (safetyActive) ...[
+              const SafetyAlertBanner(),
+              const SizedBox(height: 18),
+            ],
+            const _Greeting(),
+            const SizedBox(height: 18),
+            const _AttendanceCard(),
+            const SizedBox(height: 12),
+            _StatsRow(onOpenLeave: () => _open(const LeaveBalancesScreen())),
+            const SizedBox(height: 22),
+            const _SectionTitle('Quick Actions'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                _QuickAction(
+                  icon: CupertinoIcons.doc_text,
+                  label: 'Apply Leave',
+                  onTap: () => _open(const LeaveScreen()),
+                ),
+                _QuickAction(
+                  icon: CupertinoIcons.airplane,
+                  label: 'Plan Leave',
+                  onTap: () => _open(const LeavePlannerScreen()),
+                ),
+                _QuickAction(
+                  icon: CupertinoIcons.doc_on_clipboard,
+                  label: 'New Claim',
+                  onTap: () => _open(const NewExpenseClaimScreen()),
+                ),
+                _QuickAction(
+                  icon: CupertinoIcons.money_dollar,
+                  label: 'Payslips',
+                  onTap: () => _open(const PayslipScreen()),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            const WhosOutStrip(),
+            if (!pulseDone) ...[
+              const SizedBox(height: 12),
+              const PulseCheckInCard(),
+            ],
+            _AttentionCard(open: _open),
+            const _DashainCard(),
+            _ImportantTasks(tasks: _tasks),
+            const _TodayCard(),
+          ],
         ),
       ),
+    );
+  }
+}
 
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+// ============================================================
+// SMALL PIECES
+// ============================================================
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  final Widget? trailing;
+
+  const _SectionTitle(this.text, {this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+        ),
+        ?trailing,
+      ],
+    );
+  }
+}
+
+class _Greeting extends StatelessWidget {
+  const _Greeting();
+
+  static String _greeting(DateTime now) {
+    if (now.hour < 12) return 'Good Morning';
+    if (now.hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final firstName = currentEmployee.name.split(' ').first;
+    final bs = NepaliDateFormat(
+      'MMMM d, y',
+      Language.english,
+    ).format(NepaliDateTime.now());
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${_greeting(now)}, $firstName 👋',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${dayDate(now)} · $bs',
+          style: TextStyle(
+            fontSize: 13,
+            color: CupertinoColors.systemGrey.resolveFrom(context),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AttendanceCard extends StatelessWidget {
+  const _AttendanceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final a = context.watch<AttendanceState>();
+    final surface = AppColors.surface.resolveFrom(context);
+    final border = AppColors.border.resolveFrom(context);
+    final green = CupertinoColors.systemGreen.resolveFrom(context);
+    final blue = CupertinoColors.systemBlue.resolveFrom(context);
+    final subtle = CupertinoColors.systemGrey.resolveFrom(context);
+
+    // Adaptive system colors instead of the old hardcoded light purple,
+    // which was hard to read and ignored Dark Mode.
+    final (statusText, statusColor) = a.isCheckedOut
+        ? ('Checked Out', blue)
+        : a.isCheckedIn
+        ? ('Checked In', green)
+        : ('Not Checked In', subtle);
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: border),
+        boxShadow: [
+          BoxShadow(
+            color: CupertinoColors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // ============================================
-              // GREETING
-              // ============================================
-              const Text(
-                'Good Morning, Bishwas 👋',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'Monday, September 9',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: CupertinoColors.systemGrey,
+              const Expanded(
+                child: Text(
+                  'Attendance',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 ),
               ),
-              const SizedBox(height: 20),
-
-              // ============================================
-              // ATTENDANCE CARD — now reads from AttendanceState
-              // ============================================
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: border),
-                  boxShadow: [
-                    BoxShadow(
-                      color: CupertinoColors.black.withValues(alpha: 0.04),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Attendance',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          attendance.isCheckedIn
-                              ? attendance.checkInTime!
-                              : '--:-- --',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              attendance.isCheckedIn
-                                  ? 'Checked In'
-                                  : 'Not Checked In',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Color.fromARGB(255, 142, 142, 231),
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              attendance.isCheckedIn
-                                  ? CupertinoIcons.check_mark_circled_solid
-                                  : CupertinoIcons.circle,
-                              color: attendance.isCheckedIn
-                                  ? CupertinoColors.systemGreen
-                                  : CupertinoColors.systemGrey,
-                              size: 18,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Button now mirrors the same one-way-per-day logic as
-                    // the Attendance screen: Check In once, then Check Out
-                    // once, then disabled — matching, not just the data.
-                    SizedBox(
-                      width: double.infinity,
-                      child: CupertinoButton(
-                        color: attendance.isCheckedOut
-                            ? CupertinoColors.systemGrey
-                            : karmaRed,
-                        borderRadius: BorderRadius.circular(10),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        onPressed: attendance.isCheckedOut
-                            ? null
-                            : () {
-                                // context.read (not watch) inside a callback —
-                                // we're calling a method, not rebuilding here.
-                                if (attendance.isCheckedIn) {
-                                  context.read<AttendanceState>().checkOut();
-                                } else {
-                                  context.read<AttendanceState>().checkIn();
-                                }
-                              },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              attendance.isCheckedIn
-                                  ? CupertinoIcons.arrow_left_circle
-                                  : CupertinoIcons.arrow_right_circle,
-                              size: 16,
-                              color: CupertinoColors.white,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              attendance.isCheckedOut
-                                  ? 'Checked Out'
-                                  : attendance.isCheckedIn
-                                  ? 'Check Out'
-                                  : 'Check In',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: CupertinoColors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+              Icon(
+                a.isCheckedIn || a.isCheckedOut
+                    ? CupertinoIcons.check_mark_circled_solid
+                    : CupertinoIcons.circle,
+                color: statusColor,
+                size: 18,
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  statusText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: statusColor),
                 ),
               ),
-              const SizedBox(height: 14),
-
-              // ============================================
-              // LEAVE / WORK HOURS
-              // ============================================
-              Row(
-                children: [
-                  Expanded(
-                    child: _statCard('Leave', '12 Days', surfaceSecondary),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _statCard('Work Hours', '7h 32m', surfaceSecondary),
-                  ),
-                ],
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _timeBlock('In', a.checkInTime)),
+              const SizedBox(width: 12),
+              Expanded(child: _timeBlock('Out', a.checkOutTime)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: CupertinoButton(
+              color: a.isCheckedOut
+                  ? CupertinoColors.systemGrey
+                  : AppColors.karmaRed,
+              borderRadius: BorderRadius.circular(10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              // Shared with the Attendance module — see attendance_actions.dart.
+              onPressed: a.isCheckedOut
+                  ? null
+                  : () => toggleAttendance(context),
+              child: Text(
+                a.isCheckedOut
+                    ? 'Done for today'
+                    : a.isCheckedIn
+                    ? 'Check Out'
+                    : 'Check In',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: CupertinoColors.white,
+                ),
               ),
-              const SizedBox(height: 24),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              // ============================================
-              // QUICK ACTIONS
-              // ============================================
-              const Text(
-                'Quick Actions',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _actionTile(
-                      icon: CupertinoIcons.doc_text,
-                      label: 'Apply Leave',
-                      karmaRed: karmaRed,
-                      surface: surface,
-                      border: border,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => const LeaveScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _actionTile(
-                      icon: CupertinoIcons.time,
-                      label: 'Attendance',
-                      karmaRed: karmaRed,
-                      surface: surface,
-                      border: border,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                            builder: (context) => const AttendanceModuleScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+  Widget _timeBlock(String label, String? time) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: CupertinoColors.systemGrey,
+          ),
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            time ?? '--:--',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+    );
+  }
+}
 
-              // ============================================
-              // IMPORTANT TASKS — high-priority or overdue tasks,
-              // pulled from the exact same dummy data source the Tasks
-              // module uses (fetchMyTasks), so the two screens can
-              // never show conflicting info.
-              // ============================================
-              FutureBuilder<List<TaskItem>>(
-                future: fetchMyTasks(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const SizedBox.shrink();
-                  }
+class _StatsRow extends StatelessWidget {
+  final VoidCallback onOpenLeave;
 
-                  final importantTasks =
-                      snapshot.data!
-                          .where(
-                            (task) =>
-                                task.status != TaskStatus.completed &&
-                                (task.priority == TaskPriority.high ||
-                                    task.dueDate.isBefore(DateTime.now())),
-                          )
-                          .toList()
-                        ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+  const _StatsRow({required this.onOpenLeave});
 
-                  // Nothing urgent — don't clutter the dashboard with an
-                  // empty section.
-                  if (importantTasks.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
+  @override
+  Widget build(BuildContext context) {
+    final requests = context.watch<LeaveState>().requests;
+    final homeLeave = context.read<LeaveBalanceState>().balanceFor(
+      'Home Leave',
+      requests,
+    );
+    final a = context.watch<AttendanceState>();
 
-                  final topTasks = importantTasks.take(2).toList();
+    final left = homeLeave?.remaining;
+    final leaveText = left == null
+        ? '—'
+        : '${left == left.roundToDouble() ? left.toStringAsFixed(0) : left.toStringAsFixed(1)} days';
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Important Tasks',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                CupertinoPageRoute(
-                                  builder: (context) =>
-                                      const TasksModuleScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'View All',
-                              style: TextStyle(fontSize: 13, color: karmaRed),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      ...topTasks.map(
-                        (task) =>
-                            _importantTaskCard(context, task, surface, border),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  );
-                },
-              ),
+    final worked = a.workedToday;
+    final hoursText = worked != null
+        ? '${worked.inHours}h ${worked.inMinutes.remainder(60)}m'
+        : a.isCheckedIn
+        ? 'Since ${a.checkInTime}'
+        : '—';
 
-              // ============================================
-              // TODAY'S EVENTS
-              // ============================================
-              const Text(
-                "Today's Events",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Container(height: 1, color: border),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text('Team Meeting', style: TextStyle(fontSize: 14)),
-                  Text(
-                    '10:00 AM',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: CupertinoColors.systemGrey,
-                    ),
-                  ),
-                ],
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: onOpenLeave,
+            child: _stat(context, 'Home Leave left', leaveText),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(child: _stat(context, 'Hours today', hoursText)),
+      ],
+    );
+  }
+
+  Widget _stat(BuildContext context, String label, String value) {
+    return SectionCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: CupertinoColors.systemGrey.resolveFrom(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
+          decoration: BoxDecoration(
+            color: AppColors.surface.resolveFrom(context),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border.resolveFrom(context)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: AppColors.karmaRed, size: 22),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -459,97 +534,249 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _statCard(String label, String value, Color surfaceSecondary) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: surfaceSecondary,
-        borderRadius: BorderRadius.circular(14),
-      ),
+// ============================================================
+// NEEDS YOUR ATTENTION — only rows that actually apply
+// ============================================================
+class _AttentionCard extends StatelessWidget {
+  final void Function(Widget) open;
+
+  const _AttentionCard({required this.open});
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final overdue = context.watch<TrainingState>().overdue(now);
+    final onboarding = context.watch<OnboardingState>();
+    final expenses = context.watch<ExpenseState>();
+    final pendingLeave = context
+        .watch<LeaveState>()
+        .requests
+        .where((r) => r.status == LeaveRequestStatus.pending)
+        .length;
+
+    final rows = <(IconData, CupertinoDynamicColor, String, Widget)>[
+      if (overdue.isNotEmpty)
+        (
+          CupertinoIcons.exclamationmark_circle_fill,
+          CupertinoColors.systemRed,
+          overdue.length == 1
+              ? 'Overdue training: ${overdue.first.title}'
+              : '${overdue.length} overdue trainings',
+          const TrainingScreen(),
+        ),
+      if (!onboarding.isComplete)
+        (
+          CupertinoIcons.list_bullet,
+          CupertinoColors.systemTeal,
+          'Onboarding: ${onboarding.doneCount} of ${onboarding.tasks.length} steps done',
+          const OnboardingScreen(),
+        ),
+      if (pendingLeave > 0)
+        (
+          CupertinoIcons.airplane,
+          CupertinoColors.systemOrange,
+          pendingLeave == 1
+              ? '1 leave request awaiting approval'
+              : '$pendingLeave leave requests awaiting approval',
+          const MyRequestsScreen(),
+        ),
+      if (expenses.pendingCount > 0)
+        (
+          CupertinoIcons.doc_on_clipboard,
+          CupertinoColors.systemPurple,
+          '${expenses.pendingCount} expense claim${expenses.pendingCount == 1 ? '' : 's'} '
+              'pending · ${formatRupees(expenses.pendingTotal)}',
+          const ExpenseClaimsScreen(),
+        ),
+    ];
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12.5,
-              color: CupertinoColors.systemGrey,
+          const _SectionTitle('Needs Your Attention'),
+          const SizedBox(height: 10),
+          SectionCard(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+            child: Column(
+              children: [
+                for (final (icon, color, text, screen) in rows)
+                  CupertinoListTile(
+                    leading: Icon(icon, color: color.resolveFrom(context)),
+                    title: Text(
+                      text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const CupertinoListTileChevron(),
+                    onTap: () => open(screen),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _actionTile({
-    required IconData icon,
-    required String label,
-    required Color karmaRed,
-    required Color surface,
-    required Color border,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
+// ============================================================
+// DASHAIN — countdown + estimated festival bonus, in season only
+// ============================================================
+class _DashainCard extends StatelessWidget {
+  const _DashainCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final dashain = nextDashainDate();
+    if (dashain == null) return const SizedBox.shrink();
+    final today = dateOnly(DateTime.now());
+    final days = dateOnly(dashain).difference(today).inDays;
+    if (days < 0 || days > 60) return const SizedBox.shrink();
+
+    final bonus = estimateDashainBonus(
+      basicSalary: currentEmployee.basicSalary,
+      joiningDate: currentEmployee.joiningDate,
+      festivalDate: dashain,
+    );
+    const white = CupertinoColors.white;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 22),
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: border),
+          borderRadius: BorderRadius.circular(18),
+          gradient: const LinearGradient(
+            colors: [Color(0xFFE65100), Color(0xFFC62828)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: karmaRed, size: 24),
-            const SizedBox(height: 8),
             Text(
-              label,
+              days == 0
+                  ? '🪔 Happy Dashain!'
+                  : '🪔 Dashain in $days day${days == 1 ? '' : 's'}',
               style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
+                color: white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Estimated festival bonus',
+              style: TextStyle(color: white, fontSize: 12.5),
+            ),
+            Text(
+              formatRupees(bonus.amount),
+              style: const TextStyle(
+                color: white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              bonus.prorated
+                  ? 'Pro-rated for ${bonus.monthsOfService} months of service. '
+                        'Estimate only — confirm with HR.'
+                  : "One month's basic salary. Estimate only — confirm with HR.",
+              style: const TextStyle(color: Color(0xDDFFFFFF), fontSize: 11.5),
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  // Compact preview card for one important task — tapping any of these
-  // goes straight to the full Tasks module rather than duplicating the
-  // detail sheet here.
-  Widget _importantTaskCard(
-    BuildContext context,
-    TaskItem task,
-    Color surface,
-    Color border,
-  ) {
-    final isOverdue = task.dueDate.isBefore(DateTime.now());
-    final statusColor = taskStatusColor(task.status).resolveFrom(context);
-    final priorityColor = taskPriorityColor(task.priority).resolveFrom(context);
-    final subtleTextColor = CupertinoColors.systemGrey.resolveFrom(context);
-    final redColor = CupertinoColors.systemRed.resolveFrom(context);
+// ============================================================
+// IMPORTANT TASKS — high priority or overdue, from the Tasks data
+// ============================================================
+class _ImportantTasks extends StatelessWidget {
+  final Future<List<TaskItem>> tasks;
 
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          CupertinoPageRoute(builder: (context) => const TasksModuleScreen()),
+  const _ImportantTasks({required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<TaskItem>>(
+      future: tasks,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        final now = DateTime.now();
+        final important =
+            snapshot.data!
+                .where(
+                  (t) =>
+                      t.status != TaskStatus.completed &&
+                      (t.priority == TaskPriority.high ||
+                          t.dueDate.isBefore(now)),
+                )
+                .toList()
+              ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+        if (important.isEmpty) return const SizedBox.shrink();
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SectionTitle(
+                'Important Tasks',
+                trailing: CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  onPressed: () => Navigator.push(
+                    context,
+                    CupertinoPageRoute(
+                      builder: (_) => const TasksModuleScreen(),
+                    ),
+                  ),
+                  child: const Text('View All', style: TextStyle(fontSize: 13)),
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final t in important.take(2)) _TaskCard(task: t),
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _TaskCard extends StatelessWidget {
+  final TaskItem task;
+
+  const _TaskCard({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final overdue = task.dueDate.isBefore(DateTime.now());
+    final red = CupertinoColors.systemRed.resolveFrom(context);
+    final subtle = CupertinoColors.systemGrey.resolveFrom(context);
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        CupertinoPageRoute(builder: (_) => const TasksModuleScreen()),
+      ),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: surface,
+          color: AppColors.surface.resolveFrom(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: border),
+          border: Border.all(color: AppColors.border.resolveFrom(context)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,46 +788,147 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                StatusBadge(
-                  label: taskPriorityLabel(task.priority),
-                  color: priorityColor,
+                Flexible(
+                  child: StatusBadge(
+                    label: taskPriorityLabel(task.priority),
+                    color: taskPriorityColor(task.priority)
+                        .resolveFrom(context),
+                  ),
                 ),
-                const Spacer(),
-                Text(
-                  isOverdue
-                      ? 'Overdue · ${_formatDueDate(task.dueDate)}'
-                      : 'Due ${_formatDueDate(task.dueDate)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isOverdue ? redColor : subtleTextColor,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    overdue
+                        ? 'Overdue · ${shortDate(task.dueDate)}'
+                        : 'Due ${shortDate(task.dueDate)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: overdue ? red : subtle,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            ProgressBar(progress: task.progress, color: statusColor),
+            ProgressBar(
+              progress: task.progress,
+              color: taskStatusColor(task.status).resolveFrom(context),
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  String _formatDueDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+// ============================================================
+// TODAY — real holidays, company events, and celebrations
+// (replaces a hardcoded "Team Meeting 10:00 AM" shown every day)
+// ============================================================
+class _TodayCard extends StatelessWidget {
+  const _TodayCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final today = dateOnly(DateTime.now());
+    final holiday = holidayNameOn(today);
+    final events = demoCompanyEvents();
+    final todaysEvents = events
+        .where((e) => dateOnly(e.startsAt) == today)
+        .toList();
+    final celebrations = demoCelebrations()
+        .where((c) => c.date == today)
+        .toList();
+    final upcomingEvents =
+        events.where((e) => dateOnly(e.startsAt).isAfter(today)).toList()
+          ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
+    final next = upcomingEvents.isEmpty ? null : upcomingEvents.first;
+
+    final rows = <(String, String)>[
+      if (holiday != null) ('🎊 $holiday', 'Public holiday'),
+      for (final e in todaysEvents) ('⭐ ${e.title}', clockTime(e.startsAt)),
+      for (final c in celebrations)
+        (
+          c.kind == CelebrationKind.birthday
+              ? "🎂 ${c.name}'s birthday"
+              : '🎉 ${c.name} · ${c.years} years',
+          'Say hi!',
+        ),
     ];
-    return '${months[date.month - 1]} ${date.day}';
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle('Today'),
+          const SizedBox(height: 10),
+          SectionCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (rows.isEmpty)
+                  const Text(
+                    'Nothing special today.',
+                    style: TextStyle(fontSize: 14),
+                  )
+                else
+                  for (final (title, detail) in rows)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          ),
+                          Text(
+                            detail,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: CupertinoColors.systemGrey.resolveFrom(
+                                context,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                if (next != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Next: ${next.title} · ${dayDate(next.startsAt)}',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: CupertinoColors.systemGrey.resolveFrom(context),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
+            onPressed: () => Navigator.push(
+              context,
+              CupertinoPageRoute(
+                builder: (_) => const AttendanceModuleScreen(),
+              ),
+            ),
+            child: const Text(
+              'View attendance history →',
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -59,13 +59,14 @@ class KudosPost {
 class KudosState extends ChangeNotifier {
   // Seeded with two examples (one with points + a comment already on
   // it) so the wall demonstrates every feature on first open.
-  final List<KudosPost> _posts = [
+  final List<KudosPost> _posts = _seed();
+
+  static List<KudosPost> _seed() => [
     KudosPost(
       fromName: 'Suresh Karki',
       toName: 'Bishwas Sigdel',
       category: 'Great Work',
-      message:
-          'Thanks for getting the onboarding docs done ahead of schedule!',
+      message: 'Thanks for getting the onboarding docs done ahead of schedule!',
       postedAt: DateTime.now().subtract(const Duration(days: 2)),
       points: 10,
       reactionCount: 4,
@@ -117,8 +118,21 @@ class KudosState extends ChangeNotifier {
 
   void addComment(KudosPost post, String authorName, String text) {
     post.comments.add(
-      KudosComment(authorName: authorName, text: text, postedAt: DateTime.now()),
+      KudosComment(
+        authorName: authorName,
+        text: text,
+        postedAt: DateTime.now(),
+      ),
     );
+    notifyListeners();
+  }
+
+  // Called on logout — drops everything posted this session and
+  // returns to the demo seed, so the next user doesn't see it.
+  void reset() {
+    _posts
+      ..clear()
+      ..addAll(_seed());
     notifyListeners();
   }
 }

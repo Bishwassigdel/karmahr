@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../data/current_employee.dart';
+
 import '../state/kudos_state.dart';
+import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
 
 // Shows exactly how the kudos card will look before it's actually
@@ -23,10 +26,8 @@ class KudosPreviewScreen extends StatelessWidget {
     required this.points,
   });
 
-  // "Bishwas Sigdel" stands in for the logged-in user — same
-  // hardcoded-current-user assumption used on ProfileScreen, since
-  // there's no real login/session yet.
-  static const _currentUserName = 'Bishwas Sigdel';
+  // The logged-in user, from the shared profile (no real login yet).
+  static final _currentUserName = currentEmployee.name;
 
   void _confirmAndPost(BuildContext context) {
     context.read<KudosState>().giveKudos(
@@ -35,6 +36,14 @@ class KudosPreviewScreen extends StatelessWidget {
       category: category,
       message: message,
       points: points,
+    );
+    notifyUser(
+      context,
+      kind: AppNotificationKind.kudos,
+      title: 'Kudos sent to $recipientName',
+      body: points > 0
+          ? '$category · +$points pts. It\'s now on the Kudos Wall.'
+          : '$category. It\'s now on the Kudos Wall.',
     );
 
     // Pop twice: closes this Preview screen AND the Give Kudos form

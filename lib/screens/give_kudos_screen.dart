@@ -40,6 +40,9 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see anonymous_feedback_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -51,7 +54,12 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedRecipient = demoEmployees[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -62,11 +70,7 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedRecipient = demoEmployees[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: demoEmployees.map((employee) {
                     return Center(child: Text(employee.name));
                   }).toList(),
@@ -88,6 +92,9 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see anonymous_feedback_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -99,7 +106,12 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = kudosCategories[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -110,11 +122,7 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedCategory = kudosCategories[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: kudosCategories.map((category) {
                     return Center(child: Text(category));
                   }).toList(),

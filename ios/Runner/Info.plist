@@ -26,6 +26,17 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>mailto</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>KarmaHR uses the camera to photograph receipts and documents you choose to attach.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>KarmaHR lets you attach receipt and document photos from your library.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>KarmaHR uses Face ID to unlock the app and protect your HR data.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

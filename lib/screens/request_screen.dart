@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../state/hr_request_state.dart';
+import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
 
 // 2-4. RequestStatus, RequestCategory, HrRequest, and their
@@ -147,6 +148,9 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see anonymous_feedback_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -158,7 +162,13 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory =
+                            RequestCategory.values[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -169,11 +179,7 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedCategory = RequestCategory.values[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: RequestCategory.values.map((category) {
                     return Center(child: Text(hrCategoryLabel(category)));
                   }).toList(),
@@ -195,6 +201,9 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see anonymous_feedback_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -206,7 +215,12 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedTimeIssueType = _timeIssueTypes[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -217,11 +231,7 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedTimeIssueType = _timeIssueTypes[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: _timeIssueTypes.map((type) {
                     return Center(child: Text(type));
                   }).toList(),
@@ -243,6 +253,9 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
     showCupertinoModalPopup(
       context: context,
       builder: (context) {
+        // Only commit on Done — see anonymous_feedback_screen.dart for why.
+        int pendingIndex = selectedIndex;
+
         return Container(
           height: 300,
           color: AppColors.surface.resolveFrom(context),
@@ -254,7 +267,12 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   alignment: Alignment.centerRight,
                   child: CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedReissueReason = _reissueReasons[pendingIndex];
+                      });
+                      Navigator.pop(context);
+                    },
                     child: const Text('Done'),
                   ),
                 ),
@@ -265,11 +283,7 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
                   scrollController: FixedExtentScrollController(
                     initialItem: selectedIndex,
                   ),
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      _selectedReissueReason = _reissueReasons[index];
-                    });
-                  },
+                  onSelectedItemChanged: (index) => pendingIndex = index,
                   children: _reissueReasons.map((reason) {
                     return Center(child: Text(reason));
                   }).toList(),
@@ -454,6 +468,12 @@ class _HrRequestScreenState extends State<HrRequestScreen> {
             ? null
             : _subjectController.text.trim(),
       ),
+    );
+    notifyUser(
+      context,
+      kind: AppNotificationKind.hrRequest,
+      title: '${hrCategoryLabel(_selectedCategory!)} request submitted',
+      body: 'HR will review it — track its status in My Requests.',
     );
 
     // Reset the form — still local UI state, so setState is still

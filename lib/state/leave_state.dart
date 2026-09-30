@@ -65,7 +65,9 @@ class LeaveState extends ChangeNotifier {
   // Seeded with the same three demo examples that used to live only
   // in leave_balances_screen.dart, so Pending/Approved/Rejected are
   // all visible right away.
-  final List<LeaveRequest> _requests = [
+  final List<LeaveRequest> _requests = _seed();
+
+  static List<LeaveRequest> _seed() => [
     LeaveRequest(
       leaveType: 'Sick Leave',
       durationType: 'Full Day',
@@ -105,5 +107,14 @@ class LeaveState extends ChangeNotifier {
   void submitLeave(LeaveRequest request) {
     _requests.insert(0, request);
     notifyListeners(); // tells both screens watching this to rebuild
+  }
+
+  // Called on logout — drops everything submitted this session and
+  // returns to the demo seed, so the next user doesn't see it.
+  void reset() {
+    _requests
+      ..clear()
+      ..addAll(_seed());
+    notifyListeners();
   }
 }

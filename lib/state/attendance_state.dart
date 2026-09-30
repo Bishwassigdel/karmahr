@@ -10,15 +10,40 @@ class AttendanceState extends ChangeNotifier {
   String? checkInTime;
   String? checkOutTime;
 
+  // The real instants behind the display strings above — needed for
+  // "hours worked today", which a string like "9:02 AM" can't give.
+  DateTime? checkedInAt;
+  DateTime? checkedOutAt;
+
+  /// Hours worked, once checked out; null before that.
+  Duration? get workedToday => (checkedInAt != null && checkedOutAt != null)
+      ? checkedOutAt!.difference(checkedInAt!)
+      : null;
+
   void checkIn() {
     isCheckedIn = true;
-    checkInTime = _formatTime(DateTime.now());
+    checkedInAt = DateTime.now();
+    checkInTime = _formatTime(checkedInAt!);
     notifyListeners(); // tells every screen watching this to rebuild
   }
 
   void checkOut() {
+    isCheckedIn = false;
     isCheckedOut = true;
-    checkOutTime = _formatTime(DateTime.now());
+    checkedOutAt = DateTime.now();
+    checkOutTime = _formatTime(checkedOutAt!);
+    notifyListeners();
+  }
+
+  // Wipes today's check-in/out. Called on logout so the next person to
+  // use this device doesn't inherit the previous user's session.
+  void reset() {
+    isCheckedIn = false;
+    isCheckedOut = false;
+    checkInTime = null;
+    checkOutTime = null;
+    checkedInAt = null;
+    checkedOutAt = null;
     notifyListeners();
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../theme/app_colors.dart';
 import '../widgets/async_state_view.dart';
+import '../widgets/refreshable_list_view.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/progress_bar.dart';
 import '../widgets/stat_tile.dart';
 import '../widgets/status_badge.dart';
@@ -24,8 +26,11 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
     _load();
   }
 
-  Future<void> _load() async {
-    setState(() => _loadState = LoadState.loading);
+  // showSkeleton: false on pull-to-refresh — the pull spinner already
+  // says "loading", so the existing list stays on screen until the new
+  // data lands instead of flashing back to skeleton cards.
+  Future<void> _load({bool showSkeleton = true}) async {
+    if (showSkeleton) setState(() => _loadState = LoadState.loading);
 
     try {
       final tasks = await fetchMyTasks();
@@ -42,8 +47,18 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
 
   String _formatDueDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}';
   }
@@ -89,24 +104,28 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
 
     // CupertinoDynamicColor values must be resolved against the
     // current context before use in a plain Container/Text.
-    final pendingColor =
-        taskStatusColor(TaskStatus.pending).resolveFrom(context);
-    final inProgressColor =
-        taskStatusColor(TaskStatus.inProgress).resolveFrom(context);
-    final completedColor =
-        taskStatusColor(TaskStatus.completed).resolveFrom(context);
+    final pendingColor = taskStatusColor(TaskStatus.pending)
+        .resolveFrom(context);
+    final inProgressColor = taskStatusColor(TaskStatus.inProgress)
+        .resolveFrom(context);
+    final completedColor = taskStatusColor(TaskStatus.completed)
+        .resolveFrom(context);
 
-    final pendingCount =
-        _tasks.where((t) => t.status == TaskStatus.pending).length;
-    final inProgressCount =
-        _tasks.where((t) => t.status == TaskStatus.inProgress).length;
-    final completedCount =
-        _tasks.where((t) => t.status == TaskStatus.completed).length;
+    final pendingCount = _tasks
+        .where((t) => t.status == TaskStatus.pending)
+        .length;
+    final inProgressCount = _tasks
+        .where((t) => t.status == TaskStatus.inProgress)
+        .length;
+    final completedCount = _tasks
+        .where((t) => t.status == TaskStatus.completed)
+        .length;
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(middle: Text('Tasks')),
       child: SafeArea(
-        child: ListView(
+        child: RefreshableListView(
+          onRefresh: () => _load(showSkeleton: false),
           padding: const EdgeInsets.all(20),
           children: [
             const Text(
@@ -158,14 +177,16 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
               emptyMessage: 'No tasks assigned to you right now.',
               errorMessage: "Couldn't load your tasks.",
               onRetry: _load,
+              loadingPlaceholder: const SkeletonList(itemHeight: 92),
               child: Column(
                 children: _tasks.map((task) {
-                  final isOverdue = task.status != TaskStatus.completed &&
+                  final isOverdue =
+                      task.status != TaskStatus.completed &&
                       task.dueDate.isBefore(DateTime.now());
-                  final statusColor =
-                      taskStatusColor(task.status).resolveFrom(context);
-                  final priorityColor =
-                      taskPriorityColor(task.priority).resolveFrom(context);
+                  final statusColor = taskStatusColor(task.status)
+                      .resolveFrom(context);
+                  final priorityColor = taskPriorityColor(task.priority)
+                      .resolveFrom(context);
 
                   return GestureDetector(
                     onTap: () => _showTaskDetails(task),
@@ -190,26 +211,43 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
                           const SizedBox(height: 8),
                           Row(
                             children: [
-                              StatusBadge(
-                                label: taskStatusLabel(task.status),
-                                color: statusColor,
+                              // Badges wrap to a second line, and the due
+                              // date truncates, instead of the row running
+                              // off the card at large text sizes.
+                              Expanded(
+                                child: Wrap(
+                                  spacing: 6,
+                                  runSpacing: 4,
+                                  children: [
+                                    StatusBadge(
+                                      label: taskStatusLabel(task.status),
+                                      color: statusColor,
+                                    ),
+                                    StatusBadge(
+                                      label: taskPriorityLabel(task.priority),
+                                      color: priorityColor,
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const SizedBox(width: 6),
-                              StatusBadge(
-                                label: taskPriorityLabel(task.priority),
-                                color: priorityColor,
-                              ),
-                              const Spacer(),
-                              Text(
-                                isOverdue
-                                    ? 'Overdue · ${_formatDueDate(task.dueDate)}'
-                                    : 'Due ${_formatDueDate(task.dueDate)}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: isOverdue
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: isOverdue ? redColor : subtleTextColor,
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.end,
+                                  isOverdue
+                                      ? 'Overdue · ${_formatDueDate(task.dueDate)}'
+                                      : 'Due ${_formatDueDate(task.dueDate)}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isOverdue
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                    color: isOverdue
+                                        ? redColor
+                                        : subtleTextColor,
+                                  ),
                                 ),
                               ),
                             ],
@@ -222,7 +260,10 @@ class _TasksModuleScreenState extends State<TasksModuleScreen> {
                           const SizedBox(height: 4),
                           Text(
                             '${(task.progress * 100).round()}% complete',
-                            style: TextStyle(fontSize: 11.5, color: subtleTextColor),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: subtleTextColor,
+                            ),
                           ),
                         ],
                       ),
