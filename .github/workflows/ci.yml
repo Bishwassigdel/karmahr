@@ -10,6 +10,10 @@ jobs:
   analyze-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # BS date conversion assumes device time is Nepal time, as it is for
+      # real users. Run tests the same way.
+      TZ: Asia/Kathmandu
     steps:
       - uses: actions/checkout@v4
 

@@ -42,7 +42,10 @@ class NepaliFiscalYear {
     final oneDayBefore = nextFiscalYearStart.toDateTime().subtract(
       const Duration(days: 1),
     );
-    return oneDayBefore.toNepaliDateTime();
+    // toNepaliDateTime() shifts into Nepal time (+5:45), so outside NPT it
+    // carries a stray time of day. Keep only the date part.
+    final bs = oneDayBefore.toNepaliDateTime();
+    return NepaliDateTime(bs.year, bs.month, bs.day);
   }
 
   /// Nepali fiscal quarter (1–4) a BS date falls in: Q1 is Shrawan–Ashwin,
