@@ -1,5 +1,7 @@
 # KarmaHR
 
+[![CI](https://github.com/Bishwassigdel/karmahr/actions/workflows/ci.yml/badge.svg)](https://github.com/Bishwassigdel/karmahr/actions/workflows/ci.yml)
+
 A mobile HR Management System (HRMS) app for employees, built with Flutter.
 
 ## About
@@ -159,6 +161,10 @@ should replace.
   `$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)` setting.
 - **Android:** `minSdk` is 24 (local_auth), and core library desugaring is
   enabled (required by flutter_local_notifications).
+- **Timezone:** BS ⇄ AD conversion (`nepali_utils`) assumes the device is
+  on Nepal time (+5:45), which is true for real users. Tests pass in Nepal
+  time and UTC; in timezones behind UTC (e.g. the US) some dates come out a
+  day off. Fix before supporting users outside Nepal.
 
 ## Testing
 
@@ -180,60 +186,75 @@ flutter test
   validation, overtime limit block, safety check-in, pulse, RSVP, leave
   planner, Dashboard attention card, startup reminders, and logout reset.
 
+**CI:** `.github/workflows/ci.yml` runs `flutter analyze` and `flutter test`
+on GitHub Actions for every push and pull request to `development` or
+`main`. It runs with `TZ=Asia/Kathmandu` to match real devices (see the
+timezone note above).
+
 ## Project structure
 
 ```
+.github/workflows/ci.yml               # analyze + tests on every push/PR
 lib/
-├── main.dart
-├── data/
-│   ├── calendar_data.dart
+├── main.dart                          # appProviders(): one provider list
+├── data/                              # demo data (replaced by backend later)
+│   ├── calendar_data.dart             # BS calendar markers, holidays
 │   ├── current_employee.dart          # employee details + salary, one place
 │   ├── employee_directory_data.dart
-│   └── notices_data.dart
+│   ├── notices_data.dart
+│   └── team_data.dart                 # team leave, celebrations, events
 ├── domain/
 │   ├── nepal/                         # pure-Dart Nepal HR rules
+│   │   ├── festival_bonus.dart
 │   │   ├── fiscal_year.dart
+│   │   ├── leave_planner.dart
 │   │   ├── leave_policy.dart
+│   │   ├── overtime.dart
 │   │   ├── payroll_calculator.dart
 │   │   └── tax_slabs.dart
 │   └── pdf_documents.dart             # payslip + salary certificate PDFs
-├── state/
-│   ├── app_lock_state.dart
-│   ├── attendance_actions.dart        # shared check-in/out + reminders
-│   ├── attendance_state.dart
-│   ├── feedback_state.dart
-│   ├── hr_request_state.dart
-│   ├── kudos_state.dart
-│   ├── leave_balance_state.dart
-│   ├── leave_state.dart
+├── state/                             # Provider ChangeNotifiers
+│   ├── session.dart                   # resetSession() on logout
+│   ├── app_lock_state.dart, theme_state.dart
+│   ├── attendance_state.dart, attendance_actions.dart
+│   ├── leave_state.dart, leave_balance_state.dart
+│   ├── hr_request_state.dart, expense_state.dart, overtime_state.dart
 │   ├── notification_state.dart        # in-app inbox + notifyUser()
 │   ├── push_notification_state.dart   # device notifications + scheduling
-│   └── theme_state.dart
+│   ├── kudos_state.dart, feedback_state.dart, survey_state.dart
+│   ├── goals_state.dart, training_state.dart, onboarding_state.dart
+│   ├── document_wallet_state.dart, emergency_info_state.dart
+│   └── safety_state.dart, event_rsvp_state.dart
 ├── theme/
 │   └── app_colors.dart
 └── screens/
     ├── welcome_screen.dart, login_screen.dart
     ├── app_lock_gate.dart, app_lock_screen.dart
     ├── main_nav_screen.dart           # bottom tab bar hub
-    ├── dashboard_screen.dart
-    ├── apps_screen.dart               # grid hub + search entry point
-    ├── insights_screen.dart           # charts
-    ├── notifications_screen.dart      # inbox + NotificationBell
-    ├── global_search_screen.dart
-    ├── leave_screen.dart, leave_balances_screen.dart
+    ├── dashboard_screen.dart, apps_screen.dart, insights_screen.dart
+    ├── notifications_screen.dart, global_search_screen.dart
+    ├── leave_screen.dart, leave_balances_screen.dart, leave_planner_screen.dart
     ├── request_screen.dart, my_requests_screen.dart
+    ├── expense_claims_screen.dart, shifts_overtime_screen.dart
+    ├── payslip_screen.dart, tax_planner_screen.dart
+    ├── team_availability_screen.dart, employee_directory_screen.dart
+    ├── events_screen.dart, holiday_calendar_screen.dart, notices_screen.dart
     ├── kudos_screen.dart, give_kudos_screen.dart, kudos_preview_screen.dart
-    ├── anonymous_feedback_screen.dart
-    ├── employee_directory_screen.dart
-    ├── payslip_screen.dart
-    ├── notices_screen.dart
-    ├── holiday_calendar_screen.dart, events_screen.dart
+    ├── anonymous_feedback_screen.dart, pulse_survey_screen.dart
+    ├── goals_screen.dart, training_screen.dart, onboarding_screen.dart
+    ├── document_wallet_screen.dart, emergency_info_screen.dart
+    ├── safety_checkin_screen.dart
     ├── profile_screen.dart, settings_screen.dart
     └── apps/
         ├── attendance/, tasks/
-        └── widgets/                   # shared: skeleton, refreshable list,
-                                       # staggered entrance, PDF actions,
-                                       # async state view, badges, cards
+        └── widgets/                   # ui_kit (TileInfo, FormRow, pickers,
+                                       # dialogs), skeleton, refreshable list,
+                                       # PDF actions, badges, cards
+test/
+├── domain/                            # Nepal rules unit tests
+├── state/                             # state class tests
+├── screens/                           # widget tests
+└── qa/                                # all-screens smoke test + feature flows
 ```
 
 ## Roadmap / what's next
@@ -255,8 +276,30 @@ hardcoded current employee.
 ## Getting started
 
 ```bash
+git clone https://github.com/Bishwassigdel/karmahr.git
+cd karmahr
 flutter pub get
 flutter run
 ```
 
 Requires Xcode (or Android Studio) set up locally.
+
+## Git workflow
+
+- **`development`** — day-to-day work. Commit and push here:
+  ```bash
+  git add .
+  git commit -m "Describe your change"
+  git push
+  ```
+- **`main`** — stable code, and the default branch. It's protected by a
+  ruleset: no direct pushes, no force pushes, no deletion. Changes arrive
+  only through a pull request, and the `analyze-and-test` CI check must pass.
+
+To release `development` to `main`: on GitHub, **Pull requests → New pull
+request**, base `main` ← compare `development`, wait for the ✅ check, then
+**Merge**. Afterwards, sync locally:
+
+```bash
+git checkout main && git pull && git checkout development
+```
