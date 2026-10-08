@@ -6,6 +6,7 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 
 import 'ui_kit.dart';
@@ -70,18 +71,32 @@ class PhotoThumb extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
-      child: Image.file(
-        File(path),
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stack) => Container(
-          width: size,
-          height: size,
-          color: CupertinoColors.systemGrey5.resolveFrom(context),
-          child: const Icon(CupertinoIcons.photo),
-        ),
-      ),
+      child: kIsWeb
+          // In a browser the picker returns a blob URL, not a file path,
+          // and Image.file isn't supported there.
+          ? Image.network(
+              path,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: _placeholder,
+            )
+          : Image.file(
+              File(path),
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: _placeholder,
+            ),
+    );
+  }
+
+  Widget _placeholder(BuildContext context, Object error, StackTrace? stack) {
+    return Container(
+      width: size,
+      height: size,
+      color: CupertinoColors.systemGrey5.resolveFrom(context),
+      child: const Icon(CupertinoIcons.photo),
     );
   }
 }

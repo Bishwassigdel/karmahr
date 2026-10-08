@@ -1,0 +1,665 @@
+{
+  "@@locale": "en",
+
+  "ok": "OK",
+  "cancel": "Cancel",
+
+  "roleEmployee": "Employee",
+  "roleManager": "Manager",
+  "roleHr": "HR",
+
+  "loginTitle": "Sign in to KarmaHR",
+  "loginSubtitle": "Enter your staff credentials to continue",
+  "staffIdLabel": "Staff ID",
+  "staffIdHint": "e.g. MB-24071",
+  "passwordLabel": "Password",
+  "passwordHint": "Enter your password",
+  "forgotPassword": "Forgot password?",
+  "forgotPasswordUnavailable": "Forgot password isn't available yet.",
+  "signIn": "Sign In",
+  "ssoDivider": "or continue with SSO",
+  "continueWithSso": "Continue with SSO",
+  "ssoUnavailable": "SSO sign-in isn't available yet.",
+  "demoRoleLabel": "Sign in as (demo)",
+  "demoRoleNote": "Demo only. Once login is connected, your role will come from the server.",
+
+  "tabHome": "Home",
+  "tabTeam": "Team",
+  "tabLeave": "Leave",
+  "tabTime": "Time",
+  "tabEvents": "Events",
+  "tabMore": "More",
+  "moreApps": "Apps",
+  "moreAppsSubtitle": "All your tools in one place",
+  "moreProfile": "Profile",
+  "myInfoTitle": "My Info",
+  "infoTabJob": "Job",
+  "infoTabContact": "Contact",
+  "infoTabPay": "Pay",
+  "infoTabDocs": "Docs",
+  "infoTabEmergency": "Emergency",
+  "staffIdValue": "Staff ID {id}",
+  "@staffIdValue": {
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "jobTitleLabel": "Job title",
+  "departmentLabel": "Department",
+  "managerLabel": "Manager",
+  "joinedLabel": "Joined",
+  "employmentTypeLabel": "Employment type",
+  "workLocationLabel": "Work location",
+  "workEmailLabel": "Work email",
+  "phoneLabel": "Phone",
+  "editAction": "Edit",
+  "pendingHrApproval": "Pending HR approval: {phone}",
+  "@pendingHrApproval": {
+    "placeholders": { "phone": { "type": "String" } }
+  },
+  "basicSalaryLabel": "Basic salary",
+  "dearnessAllowanceLabel": "Dearness allowance",
+  "transportAllowanceLabel": "Transport allowance",
+  "grossMonthlyLabel": "Gross per month",
+  "payslipsLabel": "Payslips",
+  "taxPlannerLabel": "Tax planner",
+  "salaryCertificateLabel": "Salary certificate",
+  "manageDocuments": "Manage documents",
+  "noDocuments": "No documents yet.",
+  "emergencyContactsLabel": "Emergency contacts",
+  "healthInsuranceLabel": "Health insurance",
+  "manageEmergency": "Manage contacts & insurance",
+  "tabTimeOff": "Time Off",
+  "requestTimeOff": "Request time off",
+  "daysLeft": "{days} days left",
+  "@daysLeft": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "planTrip": "Plan a trip",
+  "planTripSubtitle": "Find bridge days around holidays",
+  "holidayCalendarLabel": "Holiday calendar",
+  "allBalances": "All balances",
+  "myTimeOffRequests": "My time-off requests",
+  "noTimeOffRequests": "No time off requested yet.",
+  "statusPending": "Pending",
+  "statusApproved": "Approved",
+  "statusRejected": "Rejected",
+  "statusPaid": "Paid",
+  "tabRequests": "Requests",
+  "filterAll": "All",
+  "filterOpen": "Open",
+  "filterClosed": "Closed",
+  "newRequest": "New request",
+  "requestTypeLeave": "Time off",
+  "requestTypeExpense": "Expense claim",
+  "requestTypeOvertime": "Overtime",
+  "requestTypeHr": "HR request",
+  "noRequests": "Nothing here. You're all caught up.",
+  "whatsHappening": "What's happening",
+  "feedOut": "{name} is out",
+  "@feedOut": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "feedBirthday": "{name}'s birthday",
+  "@feedBirthday": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "feedAnniversary": "{name}: {years} years at KarmaHR",
+  "@feedAnniversary": {
+    "placeholders": { "name": { "type": "String" }, "years": { "type": "int" } }
+  },
+  "feedToday": "Today",
+  "feedTomorrow": "Tomorrow",
+  "feedNothing": "Nothing happening this week.",
+  "a11ySearch": "Search",
+  "a11yAddDocument": "Add document",
+  "a11yNewExpenseClaim": "New expense claim",
+  "a11yAddGoal": "Add goal",
+  "a11yGiveKudos": "Give kudos",
+  "a11yPostComment": "Post comment",
+  "a11yRemoveContact": "Remove contact",
+  "a11yPreviousMonth": "Previous month",
+  "a11yNextMonth": "Next month",
+  "a11yShowPassword": "Show password",
+  "a11yHidePassword": "Hide password",
+  "a11yShareSlip": "Share payslip",
+  "a11yFewerHours": "Fewer hours",
+  "a11yMoreHours": "More hours",
+  "a11yNotifications": "Notifications",
+  "a11yNotificationsUnread": "Notifications, {count} unread",
+  "@a11yNotificationsUnread": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+
+  "logOut": "Log Out",
+  "logOutConfirm": "Are you sure you want to log out?",
+  "signedInAs": "Signed in as {role}",
+  "@signedInAs": {
+    "placeholders": { "role": { "type": "String" } }
+  },
+
+  "teamTitle": "My Team",
+  "teamComingTitle": "Manager tools are on the way",
+  "teamComingBody": "Approving leave, expenses and overtime, team attendance, and team reports will appear here.",
+
+  "hrTabMore": "More",
+  "hrPeopleEvents": "Birthdays & work anniversaries",
+  "hrNoPeopleEvents": "No birthdays or anniversaries in the next 30 days.",
+  "hrBirthday": "Birthday",
+  "hrAnniversary": "{years}-year work anniversary",
+  "@hrAnniversary": {
+    "placeholders": { "years": { "type": "int" } }
+  },
+  "hrSectionOverview": "Overview",
+  "hrSectionEmployees": "Employees",
+  "hrSectionLeave": "Leave & Holidays",
+  "hrSectionPayroll": "Payroll",
+  "hrSectionNotices": "Notices",
+  "hrSectionReports": "Reports",
+  "hrStatEmployees": "Employees",
+  "hrStatDepartments": "Departments",
+  "hrStatOutToday": "Out today",
+  "hrByDepartment": "Employees by department",
+  "hrNobodyOut": "Nobody is on leave today.",
+  "hrDemoDataNote": "Demo data. Real numbers arrive when the backend is connected.",
+  "hrSearchEmployees": "Search by name, role or department",
+  "hrAddEmployee": "Add employee",
+  "hrFilterActive": "Active",
+  "hrFilterInactive": "Inactive",
+  "hrNoEmployeesFound": "No employees match.",
+  "hrEmployeeTitle": "Employee",
+  "hrNoManager": "No manager",
+  "hrFilingStatus": "Tax filing",
+  "hrFilingSingle": "Single",
+  "hrFilingMarried": "Married",
+  "hrDeactivate": "Deactivate employee",
+  "hrReactivate": "Reactivate employee",
+  "hrDeactivateAction": "Deactivate",
+  "hrReactivateAction": "Reactivate",
+  "hrDeactivateMessage": "They will no longer appear in the directory or in payroll. Their records are kept.",
+  "hrReactivateMessage": "They will appear in the directory and in payroll again.",
+  "hrNewEmployee": "New employee",
+  "hrEditEmployee": "Edit employee",
+  "save": "Save",
+  "hrFieldName": "Full name",
+  "hrCheckDetails": "Check the details",
+  "hrErrName": "Enter the employee's full name.",
+  "hrErrJob": "Enter a job title and a department.",
+  "hrErrEmail": "Enter a valid email address.",
+  "hrErrPhone": "Enter a 10-digit mobile number starting with 96, 97 or 98 (optionally with +977).",
+  "hrErrSalary": "Enter a basic salary above zero.",
+  "hrApprovalsTab": "Approvals",
+  "hrPolicyTab": "Policy",
+  "hrHolidaysTab": "Holidays",
+  "hrApprove": "Approve",
+  "hrReject": "Reject",
+  "hrRejectTitle": "Reject this request?",
+  "hrDecided": "Decided",
+  "hrPolicyNoCarry": "Does not carry forward",
+  "hrPolicyCarryAll": "Carries forward without limit",
+  "hrPolicyPaid": "Paid",
+  "hrPolicyUnpaid": "Unpaid",
+  "hrPolicyNote": "These figures are placeholders until HR and legal sign them off. Editing policy arrives with the backend.",
+  "hrCompanyHolidays": "Company holidays",
+  "hrPublicHolidays": "Upcoming public holidays",
+  "hrAddHoliday": "Add company holiday",
+  "hrHolidayName": "Holiday name",
+  "hrHolidayDate": "Date",
+  "hrNoCompanyHolidays": "No company holidays yet.",
+  "hrNoPublicHolidays": "No upcoming public holidays in the calendar.",
+  "hrHolidayNeedsName": "Enter a name for the holiday.",
+  "hrRemoveHoliday": "Remove holiday",
+  "hrRemoveAction": "Remove",
+  "hrHolidayNote": "Public holidays come from the government calendar. Company holidays you add here are HR's record; the employee calendar picks them up once the backend is connected.",
+  "hrNeedsAction": "Needs your action",
+  "hrPayPeriod": "Pay period",
+  "hrRunPayroll": "Run payroll",
+  "hrRecalculate": "Recalculate",
+  "hrApprovePayroll": "Approve payroll",
+  "hrApprovePayrollMessage": "Once approved, the figures are frozen: later changes to employee records won't alter this payroll.",
+  "hrMarkPaid": "Mark as paid",
+  "hrMarkPaidMessage": "Do this after the bank transfer is done.",
+  "hrPayrollDraft": "Draft",
+  "hrPayGross": "Gross",
+  "hrPayDeductions": "Deductions",
+  "hrPayNet": "Net pay",
+  "hrExportRegister": "Payroll register (CSV)",
+  "hrExportBank": "Bank transfer file (CSV)",
+  "hrExportTds": "TDS report (CSV)",
+  "hrExportSsf": "SSF contribution report (CSV)",
+  "hrSharePayslip": "Share payslip (PDF)",
+  "hrBankNeedsApproval": "Approve the payroll first to export the bank file.",
+  "hrBankName": "Bank",
+  "hrAccountNumber": "Account number",
+  "hrErrAccount": "Account numbers contain digits only.",
+  "hrBankMissing": "{count, plural, =1{1 employee has no bank account on file and is left out of the bank file: {names}} other{{count} employees have no bank account on file and are left out of the bank file: {names}}}",
+  "@hrBankMissing": {
+    "placeholders": { "count": { "type": "int" }, "names": { "type": "String" } }
+  },
+  "hrLetters": "Letters",
+  "hrLettersFooter": "Made as PDFs for you to sign and share.",
+  "hrLetterAppointment": "Appointment letter",
+  "hrLetterExperience": "Experience letter",
+  "hrAddDocument": "Add document",
+  "hrDocName": "Document name",
+  "hrDocType": "Type",
+  "hrDocExpires": "Expires",
+  "hrDocNoExpiry": "No expiry",
+  "hrDocExpired": "Expired",
+  "hrNoDocs": "No documents on file.",
+  "hrDocNeedsName": "Enter a name for the document.",
+  "hrRemoveDoc": "Remove document",
+  "hrReportsDocs": "Documents expiring soon",
+  "hrNoExpiringDocs": "No documents expire in the next 30 days.",
+  "hrDocContract": "Employment contract",
+  "hrDocCitizenship": "Citizenship certificate",
+  "hrDocPan": "PAN card",
+  "hrDocPermit": "Work permit",
+  "hrDocCertificate": "Certificate",
+  "hrDocOther": "Other",
+  "hrAuditDocumentAdded": "Document added",
+  "hrAuditDocumentRemoved": "Document removed",
+  "hrSectionAttendance": "Attendance",
+  "hrSectionReviews": "Reviews",
+  "hrSectionHiring": "Hiring",
+  "hrAttPresent": "Present",
+  "hrAttLate": "Late",
+  "hrAttAbsent": "Absent",
+  "hrAttOnLeave": "On leave",
+  "hrAttWeeklyOff": "Weekly holiday. Nobody is expected at work.",
+  "hrAttNoRecords": "No records for this day.",
+  "hrReviewStart": "Start review cycle",
+  "hrReviewName": "Cycle name",
+  "hrReviewNeedsName": "Enter a name for the review cycle.",
+  "hrReviewNoCycles": "No review cycles yet.",
+  "hrReviewAdvance": "Next step",
+  "hrStageNotStarted": "Not started",
+  "hrStageSelf": "Self review done",
+  "hrStageManager": "Manager review done",
+  "hrStageCompleted": "Completed",
+  "hrAuditReviewStarted": "Review cycle started",
+  "hrJobNew": "New job",
+  "hrJobOpenings": "Openings",
+  "hrJobOpen": "Open",
+  "hrJobClosed": "Closed",
+  "hrJobClose": "Close job",
+  "hrJobReopen": "Reopen job",
+  "hrNoJobs": "No jobs yet.",
+  "hrJobNeedsDetails": "Enter a job title, a department and at least one opening.",
+  "hrApplicants": "Applicants",
+  "hrAddApplicant": "Add applicant",
+  "hrApplicantName": "Applicant name",
+  "hrApplicantEmail": "Email (optional)",
+  "hrApplicantNeedsName": "Enter the applicant's name.",
+  "hrNoApplicants": "No applicants yet.",
+  "hrApplicantAdvance": "Next stage",
+  "hrAddAsEmployee": "Add as employee",
+  "hrAppApplied": "Applied",
+  "hrAppScreening": "Screening",
+  "hrAppInterview": "Interview",
+  "hrAppOffer": "Offer",
+  "hrAppHired": "Hired",
+  "hrAuditJobPosted": "Job posted",
+  "hrAuditApplicantHired": "Applicant hired",
+  "hrShowOrgChart": "Show org chart",
+  "hrShowList": "Show list",
+  "hrTabTasks": "Tasks",
+  "hrOnboarding": "Onboarding",
+  "hrOffboarding": "Offboarding",
+  "hrTaskCollectDocs": "Collect documents",
+  "hrTaskCreateAccounts": "Create accounts and email",
+  "hrTaskIssueEquipment": "Issue laptop and equipment",
+  "hrTaskInduction": "Hold induction session",
+  "hrTaskIntroduceTeam": "Introduce the team",
+  "hrTaskExitInterview": "Exit interview",
+  "hrTaskReturnAssets": "Collect laptop and ID card",
+  "hrTaskFinalSettlement": "Final salary settlement",
+  "hrTaskDisableAccounts": "Disable accounts",
+  "hrTaskExperienceLetter": "Issue experience letter",
+  "hrImportEmployees": "Import from CSV",
+  "hrImportHint": "One person per line: Name, Job title, Department, Email, Phone, Basic salary, Dearness allowance, Transport allowance",
+  "hrImportAction": "Import",
+  "hrImportNothing": "There is nothing to import.",
+  "hrImportBadColumns": "needs 8 columns",
+  "hrImportResult": "Import finished",
+  "hrAuditEmployeesImported": "Employees imported",
+  "roleOwner": "CEO",
+  "ownerSecOverview": "Overview",
+  "ownerSecDepartments": "Departments",
+  "ownerSecPeople": "People",
+  "ownerSecMoney": "Money",
+  "ownerSecActivity": "Activity",
+  "ownerKpiHeadcount": "Headcount",
+  "ownerKpiProgress": "Progress score",
+  "ownerKpiAttendance": "Attendance",
+  "ownerKpiPayroll": "Payroll this month",
+  "ownerKpiAttrition": "Left in the last year",
+  "ownerNeedsAttention": "Needs attention",
+  "ownerAllGood": "Nothing needs attention right now.",
+  "ownerDeptProgress": "Department progress",
+  "ownerSeeAll": "See all",
+  "ownerLowestFirst": "Lowest score first",
+  "ownerStatusOnTrack": "On track",
+  "ownerStatusWatch": "Watch",
+  "ownerStatusBehind": "Behind",
+  "ownerHowCalculated": "How is progress calculated?",
+  "ownerMetricGoals": "Goals on track",
+  "ownerMetricReviews": "Reviews completed",
+  "ownerMetricTraining": "Training completed",
+  "ownerTrend12": "Headcount, last 12 months",
+  "ownerByBranch": "By branch",
+  "ownerViewPeople": "See the people",
+  "ownerSearchPeople": "Search by name or role",
+  "ownerAllDepartments": "All departments",
+  "ownerAllBranches": "All branches",
+  "ownerDepartmentLabel": "Department",
+  "ownerBranchLabel": "Branch",
+  "ownerAttendance30": "Attendance, last 30 days",
+  "ownerGoalsThisQuarter": "Goals this quarter",
+  "ownerReviewLabel": "Performance review",
+  "ownerReviewDone": "Done",
+  "ownerReviewPending": "Not done",
+  "ownerTrainingLabel": "Training",
+  "ownerLeaveBalance": "Leave balance",
+  "ownerPay": "Monthly pay",
+  "ownerShowPay": "Show pay",
+  "ownerHidePay": "Hide pay",
+  "ownerPayHidden": "Hidden",
+  "ownerShowPayMessage": "Viewing someone's pay is recorded in the audit log.",
+  "hrAuditPayViewed": "Pay viewed",
+  "ownerPayrollTrend": "Payroll, last 12 months",
+  "ownerPerEmployee": "Average per employee",
+  "ownerByDepartment": "By department",
+  "ownerLakh": "lakh",
+  "ownerCrore": "crore",
+  "ownerWaiting": "Waiting for a decision",
+  "ownerNoWaiting": "Nothing is waiting for a decision.",
+  "ownerNoPeople": "No one matches.",
+  "ownerDemoBanner": "Demo company of {count} people, so the charts have something to show. Real numbers arrive with the backend.",
+  "@ownerDemoBanner": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ownerPlan": "Plan {plan}",
+  "@ownerPlan": {
+    "placeholders": { "plan": { "type": "int" } }
+  },
+  "ownerJoinedLeft": "Joined {joined} · Left {left} in 30 days",
+  "@ownerJoinedLeft": {
+    "placeholders": { "joined": { "type": "int" }, "left": { "type": "int" } }
+  },
+  "ownerAttBehind": "{name} is behind on progress (score {score})",
+  "@ownerAttBehind": {
+    "placeholders": { "name": { "type": "String" }, "score": { "type": "int" } }
+  },
+  "ownerAttAttrition": "{name}: {percent}% of people left in the last year",
+  "@ownerAttAttrition": {
+    "placeholders": { "name": { "type": "String" }, "percent": { "type": "int" } }
+  },
+  "ownerAttShort": "{name} is {count} people short of its plan",
+  "@ownerAttShort": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "ownerAttAttendance": "{name} attendance is {percent}%",
+  "@ownerAttAttendance": {
+    "placeholders": { "name": { "type": "String" }, "percent": { "type": "int" } }
+  },
+  "ownerAttRequests": "{count, plural, =1{1 request has waited over 3 days} other{{count} requests have waited over 3 days}}",
+  "@ownerAttRequests": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ownerHeadcountOfPlan": "{count} of {plan} planned",
+  "@ownerHeadcountOfPlan": {
+    "placeholders": { "count": { "type": "int" }, "plan": { "type": "int" } }
+  },
+  "ownerFewPeople": "Fewer than {min} people",
+  "@ownerFewPeople": {
+    "placeholders": { "min": { "type": "int" } }
+  },
+  "ownerFormulaBody": "Each department scores 0 to 100: {goals}% goals on track + {reviews}% reviews completed + {training}% training completed + {attendance}% attendance.\n\n75 and above is on track, 60 to 74 needs watching, below 60 is behind.\n\nGroups of fewer than {min} people are not shown, so nobody can be identified.",
+  "@ownerFormulaBody": {
+    "placeholders": {
+      "goals": { "type": "int" },
+      "reviews": { "type": "int" },
+      "training": { "type": "int" },
+      "attendance": { "type": "int" },
+      "min": { "type": "int" }
+    }
+  },
+  "ownerAttritionValue": "{percent}% of the team",
+  "@ownerAttritionValue": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "ownerJoinedLast90": "Joined in the last 90 days: {count}",
+  "@ownerJoinedLast90": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "ownerTenure": "{years}y {months}m",
+  "@ownerTenure": {
+    "placeholders": { "years": { "type": "int" }, "months": { "type": "int" } }
+  },
+  "ownerDays": "{days} days",
+  "@ownerDays": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "ownerShowPayTitle": "Show {name}'s pay?",
+  "@ownerShowPayTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "ownerVsLastMonth": "{change} vs last month",
+  "@ownerVsLastMonth": {
+    "placeholders": { "change": { "type": "String" } }
+  },
+  "ownerWaitingDays": "{count, plural, =0{under a day} =1{1 day} other{{count} days}}",
+  "@ownerWaitingDays": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrAuditGroupPeople": "People",
+  "hrAuditGroupCompany": "Company",
+  "hrExportAudit": "Copy audit log as CSV",
+  "hrReviewDefaultName": "Q{quarter} {year} review",
+  "@hrReviewDefaultName": {
+    "placeholders": { "quarter": { "type": "int" }, "year": { "type": "String" } }
+  },
+  "hrReviewProgress": "{done} of {total} completed",
+  "@hrReviewProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "hrReviewStartHint": "{count, plural, =1{Starts a review for the 1 active employee.} other{Starts a review for all {count} active employees.}}",
+  "@hrReviewStartHint": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrJobSummary": "{active, plural, =1{1 applicant} other{{active} applicants}} · {openings, plural, =1{1 opening} other{{openings} openings}}",
+  "@hrJobSummary": {
+    "placeholders": { "active": { "type": "int" }, "openings": { "type": "int" } }
+  },
+  "hrDirectReports": "{count, plural, =1{1 direct report} other{{count} direct reports}}",
+  "@hrDirectReports": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrTasksDone": "{done} of {total} done",
+  "@hrTasksDone": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "hrImportAdded": "{count, plural, =0{No employees added.} =1{Added 1 employee.} other{Added {count} employees.}}",
+  "@hrImportAdded": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrImportSkipped": "{count, plural, =1{1 row was skipped:} other{{count} rows were skipped:}}",
+  "@hrImportSkipped": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrImportLine": "Line {line}: {reason}",
+  "@hrImportLine": {
+    "placeholders": { "line": { "type": "int" }, "reason": { "type": "String" } }
+  },
+  "a11yPreviousDay": "Previous day",
+  "a11yNextDay": "Next day",
+  "hrAttCheckedIn": "In {time}",
+  "@hrAttCheckedIn": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "hrAttRate": "{percent}% came to work",
+  "@hrAttRate": {
+    "placeholders": { "percent": { "type": "int" } }
+  },
+  "hrDocExpiresIn": "Expires in {days} days",
+  "@hrDocExpiresIn": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "hrRemoveDocTitle": "Remove \"{title}\"?",
+  "@hrRemoveDocTitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "hrActionDocs": "{count, plural, =1{1 document expiring soon} other{{count} documents expiring soon}}",
+  "@hrActionDocs": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrCsvCopiedTitle": "Copied",
+  "hrCsvCopied": "Paste it into a spreadsheet.",
+  "hrPaySsf": "Social security (SSF)",
+  "hrPayCit": "CIT contribution",
+  "hrPayInsurance": "Insurance premium",
+  "hrPayTax": "Income tax (TDS)",
+  "hrPayPlaceholderNote": "Tax and SSF figures use placeholder rules. Have finance verify them before running real payroll.",
+  "hrNoActiveStaff": "There are no active employees to pay for this month.",
+  "hrPayNotRun": "Payroll for {month} hasn't been run yet.",
+  "@hrPayNotRun": {
+    "placeholders": { "month": { "type": "String" } }
+  },
+  "hrApprovePayrollTitle": "Approve payroll for {month}?",
+  "@hrApprovePayrollTitle": {
+    "placeholders": { "month": { "type": "String" } }
+  },
+  "hrMarkPaidTitle": "Mark {month} payroll as paid?",
+  "@hrMarkPaidTitle": {
+    "placeholders": { "month": { "type": "String" } }
+  },
+  "hrPayLineSubtitle": "Gross {gross} · Tax {tax}",
+  "@hrPayLineSubtitle": {
+    "placeholders": { "gross": { "type": "String" }, "tax": { "type": "String" } }
+  },
+  "hrActionPayroll": "Payroll for {month} isn't approved yet",
+  "@hrActionPayroll": {
+    "placeholders": { "month": { "type": "String" } }
+  },
+  "hrNewNotice": "New notice",
+  "hrNoticeTitleField": "Title",
+  "hrNoticeCategory": "Category",
+  "hrNoticeBodyField": "Write the notice here",
+  "hrPublish": "Publish",
+  "hrNoNotices": "No notices yet.",
+  "hrNoticeNeedsTitle": "Enter a title for the notice.",
+  "hrNoticeNeedsBody": "Write the text of the notice.",
+  "hrDeleteNotice": "Delete notice",
+  "hrDeleteNoticeMessage": "Employees will no longer see it.",
+  "hrDeleteAction": "Delete",
+  "hrNoticesFooter": "Published notices appear in every employee's Notices.",
+  "hrCatGeneral": "General",
+  "hrCatUrgent": "Urgent",
+  "hrCatPolicy": "Policy",
+  "hrCatHoliday": "Holiday",
+  "hrDeleteNoticeTitle": "Delete \"{title}\"?",
+  "@hrDeleteNoticeTitle": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "hrReportsHeadcount": "Headcount",
+  "hrReportsByDepartment": "By department",
+  "hrReportsByType": "By employment type",
+  "hrReportsRequests": "Requests",
+  "hrReportsPayroll": "Latest payroll",
+  "hrReportsNoPayroll": "No payroll has been run yet.",
+  "hrReportsExport": "Export",
+  "hrExportEmployees": "Copy employee list as CSV",
+  "hrReportsActivity": "Recent activity",
+  "hrNoActivity": "Nothing has happened yet.",
+  "hrAuditEmployeeAdded": "Employee added",
+  "hrAuditEmployeeUpdated": "Employee updated",
+  "hrAuditEmployeeDeactivated": "Employee deactivated",
+  "hrAuditEmployeeReactivated": "Employee reactivated",
+  "hrAuditRequestApproved": "Request approved",
+  "hrAuditRequestRejected": "Request rejected",
+  "hrAuditPayrollRun": "Payroll calculated",
+  "hrAuditPayrollApproved": "Payroll approved",
+  "hrAuditPayrollPaid": "Payroll marked as paid",
+  "hrAuditNoticePublished": "Notice published",
+  "hrAuditNoticeDeleted": "Notice deleted",
+  "hrAuditHolidayAdded": "Company holiday added",
+  "hrAuditHolidayRemoved": "Company holiday removed",
+  "hrAuditLine": "{actor}: {detail}",
+  "@hrAuditLine": {
+    "placeholders": { "actor": { "type": "String" }, "detail": { "type": "String" } }
+  },
+  "hrAllClear": "Nothing needs your action.",
+  "hrWaitingForYou": "{count, plural, =0{Nothing is waiting for you} =1{1 request is waiting for you} other{{count} requests are waiting for you}}",
+  "@hrWaitingForYou": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrActionApprovals": "{count, plural, =1{1 request to review} other{{count} requests to review}}",
+  "@hrActionApprovals": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrRejectMessage": "The request from {name} will be marked as rejected. This can't be changed afterwards.",
+  "@hrRejectMessage": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "hrPolicyDaysPerYear": "{days} days a year",
+  "@hrPolicyDaysPerYear": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "hrPolicyAccrual": "1 day for every {days} days worked",
+  "@hrPolicyAccrual": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "hrPolicyCarryUpTo": "Carries forward up to {days} days",
+  "@hrPolicyCarryUpTo": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "hrPolicyDocument": "Document needed after {days} days",
+  "@hrPolicyDocument": {
+    "placeholders": { "days": { "type": "String" } }
+  },
+  "hrRemoveHolidayTitle": "Remove {name}?",
+  "@hrRemoveHolidayTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "hrEmployeeCount": "{count, plural, =1{1 employee} other{{count} employees}}",
+  "@hrEmployeeCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrDeactivateTitle": "Deactivate {name}?",
+  "@hrDeactivateTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "hrReactivateTitle": "Reactivate {name}?",
+  "@hrReactivateTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+
+  "settingsTitle": "Settings",
+  "languageHeader": "LANGUAGE",
+  "languageFooter": "Screens are being translated step by step. Anything not translated yet stays in English.",
+  "appearanceHeader": "APPEARANCE",
+  "appearanceFooter": "Choose how KarmaHR looks. \"System Default\" switches automatically with your phone. Pick Light or Dark to keep it fixed no matter what your phone is set to.",
+  "themeSystem": "System Default",
+  "themeSystemSubtitle": "Match this phone's Light/Dark setting",
+  "themeLight": "Light",
+  "themeLightSubtitle": "Always use Light appearance",
+  "themeDark": "Dark",
+  "themeDarkSubtitle": "Always use Dark appearance",
+  "securityHeader": "SECURITY",
+  "appLock": "App Lock",
+  "appLockFooter": "Require Face ID, Touch ID, or your device passcode every time KarmaHR is opened.",
+  "appLockUnavailableFooter": "Face ID, Touch ID, and a device passcode aren't available on this device, so App Lock can't be turned on here.",
+  "appLockVerifyReason": "Verify to enable App Lock",
+  "couldNotVerifyTitle": "Could Not Verify",
+  "couldNotVerifyBody": "App Lock wasn't enabled because we couldn't verify your identity. Make sure Face ID, Touch ID, or a device passcode is set up, then try again.",
+  "notificationsHeader": "NOTIFICATIONS",
+  "pushNotifications": "Push Notifications",
+  "pushFooter": "Get reminders to check out, event reminders, and updates on your requests, even when KarmaHR is closed. Everything also appears in the in-app inbox either way.",
+  "pushUnavailableFooter": "Notifications aren't available on this device.",
+  "sendTestNotification": "Send Test Notification",
+  "notificationsNotAllowedTitle": "Notifications Not Allowed",
+  "notificationsNotAllowedBody": "KarmaHR needs permission to send notifications. Allow it in your phone's Settings app under KarmaHR → Notifications, then try again.",
+  "testNotificationTitle": "Test notification",
+  "testNotificationBody": "Push notifications are working. 🎉",
+  "hrNewJoiners": "New joiners (last 30 days)",
+  "hrNoNewJoiners": "Nobody has joined in the last 30 days."
+}

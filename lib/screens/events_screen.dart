@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:nepali_utils/nepali_utils.dart';
+import '../domain/nepal/bs_dates.dart';
 import 'package:provider/provider.dart';
 
 import 'apps/widgets/ui_kit.dart';
@@ -204,7 +205,7 @@ class _EventsScreenState extends State<EventsScreen> {
   // soonest. Both dates are truncated to year/month/day before
   // subtracting, so partial days never cause an off-by-one.
   Widget _buildCountdownCard(UpcomingMarker next, Color cardBackground) {
-    final today = NepaliDateTime.now();
+    final today = bsToday();
     final todayOnly = NepaliDateTime(today.year, today.month, today.day);
     final daysUntil = next.date.difference(todayOnly).inDays;
 

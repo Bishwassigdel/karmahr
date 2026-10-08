@@ -6,6 +6,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
 import 'notices_screen.dart';
@@ -158,25 +159,36 @@ class NotificationBell extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          const Icon(CupertinoIcons.bell),
+          Icon(
+            CupertinoIcons.bell,
+            semanticLabel: unread > 0
+                ? context.l10n.a11yNotificationsUnread(unread)
+                : context.l10n.a11yNotifications,
+          ),
           if (unread > 0)
             Positioned(
               right: -6,
               top: -4,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                constraints: const BoxConstraints(minWidth: 17),
-                decoration: BoxDecoration(
-                  color: AppColors.karmaRed,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  unread > 9 ? '9+' : '$unread',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: CupertinoColors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
+              // The icon's label already says how many are unread.
+              child: ExcludeSemantics(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 1,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 17),
+                  decoration: BoxDecoration(
+                    color: AppColors.karmaRed,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    unread > 9 ? '9+' : '$unread',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: CupertinoColors.white,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

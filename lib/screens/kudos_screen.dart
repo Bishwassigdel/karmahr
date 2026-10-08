@@ -1,4 +1,6 @@
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../data/current_employee.dart';
@@ -23,7 +25,7 @@ class KudosScreen extends StatelessWidget {
             context,
             CupertinoPageRoute(builder: (context) => const GiveKudosScreen()),
           ),
-          child: const Icon(CupertinoIcons.add_circled_solid),
+          child: Icon(CupertinoIcons.add_circled_solid, semanticLabel: context.l10n.a11yGiveKudos),
         ),
       ),
       child: SafeArea(
@@ -292,8 +294,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
                 CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: _submitComment,
-                  child: const Icon(
-                    CupertinoIcons.arrow_up_circle_fill,
+                  child: Icon(
+                    CupertinoIcons.arrow_up_circle_fill, semanticLabel: context.l10n.a11yPostComment,
                     size: 30,
                   ),
                 ),

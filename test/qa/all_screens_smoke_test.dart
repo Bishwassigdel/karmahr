@@ -3,6 +3,7 @@
 //   - narrow phone (320pt wide — iPhone SE class), light mode
 //   - narrow phone, DARK mode, with 130% text size (accessibility)
 //   - wide phone (430pt — Pro Max class), light mode
+//   - narrow phone in Nepali (Devanagari text runs longer)
 // The viewport is made very tall so lists build ALL their rows, not just
 // the ones that fit on screen — an overflow in row 9 counts too.
 //
@@ -10,11 +11,13 @@
 // before it reached a real device.
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:my_first_flutter_app/data/notices_data.dart';
+import 'package:my_first_flutter_app/l10n/app_localizations.dart';
 import 'package:my_first_flutter_app/main.dart';
 import 'package:my_first_flutter_app/screens/anonymous_feedback_screen.dart';
 import 'package:my_first_flutter_app/screens/app_lock_screen.dart';
@@ -31,6 +34,20 @@ import 'package:my_first_flutter_app/screens/give_kudos_screen.dart';
 import 'package:my_first_flutter_app/screens/global_search_screen.dart';
 import 'package:my_first_flutter_app/screens/goals_screen.dart';
 import 'package:my_first_flutter_app/screens/holiday_calendar_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_attendance_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employee_detail_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employee_form_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employees_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_hiring_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_job_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_leave_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_notice_form_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_notices_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_payroll_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_portal_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_reports_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_review_cycle_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_reviews_screen.dart';
 import 'package:my_first_flutter_app/screens/insights_screen.dart';
 import 'package:my_first_flutter_app/screens/kudos_preview_screen.dart';
 import 'package:my_first_flutter_app/screens/kudos_screen.dart';
@@ -39,6 +56,16 @@ import 'package:my_first_flutter_app/screens/leave_planner_screen.dart';
 import 'package:my_first_flutter_app/screens/leave_screen.dart';
 import 'package:my_first_flutter_app/screens/login_screen.dart';
 import 'package:my_first_flutter_app/screens/main_nav_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_activity_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_department_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_departments_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_money_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_overview_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_people_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_person_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_portal_screen.dart';
+import 'package:my_first_flutter_app/screens/manager/team_screen.dart';
+import 'package:my_first_flutter_app/screens/more_screen.dart';
 import 'package:my_first_flutter_app/screens/my_requests_screen.dart';
 import 'package:my_first_flutter_app/screens/notices_screen.dart';
 import 'package:my_first_flutter_app/screens/notifications_screen.dart';
@@ -47,6 +74,8 @@ import 'package:my_first_flutter_app/screens/payslip_screen.dart';
 import 'package:my_first_flutter_app/screens/profile_screen.dart';
 import 'package:my_first_flutter_app/screens/pulse_survey_screen.dart';
 import 'package:my_first_flutter_app/screens/request_screen.dart';
+import 'package:my_first_flutter_app/screens/requests_screen.dart';
+import 'package:my_first_flutter_app/screens/time_off_screen.dart';
 import 'package:my_first_flutter_app/screens/safety_checkin_screen.dart';
 import 'package:my_first_flutter_app/screens/settings_screen.dart';
 import 'package:my_first_flutter_app/screens/shifts_overtime_screen.dart';
@@ -54,6 +83,7 @@ import 'package:my_first_flutter_app/screens/tax_planner_screen.dart';
 import 'package:my_first_flutter_app/screens/team_availability_screen.dart';
 import 'package:my_first_flutter_app/screens/training_screen.dart';
 import 'package:my_first_flutter_app/screens/welcome_screen.dart';
+import 'package:my_first_flutter_app/state/auth_state.dart';
 import 'package:my_first_flutter_app/state/safety_state.dart';
 import 'package:my_first_flutter_app/state/survey_state.dart';
 
@@ -63,6 +93,9 @@ final Map<String, Widget Function()> screens = {
   'MainNav (Dashboard tab)': () => const MainNavScreen(),
   'Dashboard': () => const DashboardScreen(),
   'Apps': () => const AppsScreen(),
+  'More': () => const MoreScreen(),
+  'Time Off': () => const TimeOffScreen(),
+  'Requests': () => const RequestsScreen(),
   'Leave': () => const LeaveScreen(),
   'Leave (pre-filled)': () => LeaveScreen(
     initialStartDate: DateTime(2026, 10, 8),
@@ -109,6 +142,30 @@ final Map<String, Widget Function()> screens = {
   'Goals': () => const GoalsScreen(),
   'Pulse & Polls': () => const PulseSurveyScreen(),
   'Safety Check-in': () => const SafetyCheckInScreen(),
+  'Manager Team': () => const TeamScreen(),
+  'HR Portal': () => const HrPortalScreen(),
+  'HR Employees': () => const HrEmployeesScreen(),
+  'HR Employee detail': () =>
+      const HrEmployeeDetailScreen(employeeId: 'MB-24071'),
+  'HR New employee': () => const HrEmployeeFormScreen(),
+  'HR Leave & Holidays': () => const HrLeaveScreen(),
+  'HR Payroll': () => const HrPayrollScreen(),
+  'HR Notices': () => const HrNoticesScreen(),
+  'HR Reports': () => const HrReportsScreen(),
+  'HR Attendance': () => const HrAttendanceScreen(),
+  'HR Reviews': () => const HrReviewsScreen(),
+  'HR Review cycle': () => const HrReviewCycleScreen(cycleId: 'c2'),
+  'HR Hiring': () => const HrHiringScreen(),
+  'HR Job': () => const HrJobScreen(jobId: 'j1'),
+  'CEO Portal': () => const OwnerPortalScreen(),
+  'CEO Overview': () => const OwnerOverviewScreen(),
+  'CEO Departments': () => const OwnerDepartmentsScreen(),
+  'CEO Department': () => const OwnerDepartmentScreen(deptId: 'd-support'),
+  'CEO People': () => const OwnerPeoplePage(),
+  'CEO Person': () => const OwnerPersonScreen(personId: 'E1001'),
+  'CEO Money': () => const OwnerMoneyScreen(),
+  'CEO Activity': () => const OwnerActivityScreen(),
+  'HR New notice': () => const HrNoticeFormScreen(),
 };
 
 class Condition {
@@ -116,14 +173,22 @@ class Condition {
   final double width;
   final Brightness brightness;
   final double textScale;
+  final Locale locale;
 
-  const Condition(this.name, this.width, this.brightness, this.textScale);
+  const Condition(
+    this.name,
+    this.width,
+    this.brightness,
+    this.textScale, [
+    this.locale = const Locale('en'),
+  ]);
 }
 
 const conditions = [
   Condition('narrow light', 320, Brightness.light, 1.0),
   Condition('narrow dark +130% text', 320, Brightness.dark, 1.3),
   Condition('wide light', 430, Brightness.light, 1.0),
+  Condition('narrow Nepali', 320, Brightness.light, 1.0, Locale('ne')),
 ];
 
 Future<void> pumpScreen(
@@ -146,6 +211,14 @@ Future<void> pumpScreen(
       providers: appProviders(),
       child: CupertinoApp(
         theme: CupertinoThemeData(brightness: c.brightness),
+        locale: c.locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
         home: screen,
       ),
     ),
@@ -177,7 +250,9 @@ void main() {
 
       // States that only appear after an action — the safety alert and a
       // completed pulse check-in change the Dashboard's layout.
-      testWidgets('Dashboard during a safety drill, pulse answered', (tester) async {
+      testWidgets('Dashboard during a safety drill, pulse answered', (
+        tester,
+      ) async {
         await pumpScreen(
           tester,
           const DashboardScreen(),
@@ -189,6 +264,22 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(find.text('Earthquake Drill'), findsOneWidget);
+      });
+
+      testWidgets('MainNav as a manager (six tabs)', (tester) async {
+        await pumpScreen(
+          tester,
+          // MainNavScreen reads the role once, so build a fresh one when
+          // the role changes (in the app, a sign-in pushes a new one).
+          Consumer<AuthState>(
+            builder: (_, auth, _) => MainNavScreen(key: ValueKey(auth.role)),
+          ),
+          c,
+          prime: (context) =>
+              context.read<AuthState>().signIn(UserRole.manager),
+        );
+        expect(tester.takeException(), isNull);
+        expect(find.byIcon(CupertinoIcons.person_3), findsOneWidget);
       });
 
       testWidgets('Safety Check-in during a drill', (tester) async {

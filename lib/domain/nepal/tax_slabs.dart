@@ -5,7 +5,7 @@
 // only; nothing else in the payroll code needs to change when IRD
 // revises the slabs.
 //
-// NOTE(finance-review): replace with IRD Nepal's published slabs for
+
 // the fiscal year this app is actually used in, before trusting any
 // number this produces.
 
@@ -22,7 +22,7 @@ class TaxSlab {
 }
 
 /// Slabs keyed by "startYear-status", e.g. "2082-single".
-/// Values are PLACEHOLDERS — see the file-level NOTE above.
+/// Values are PLACEHOLDERS — see file-level 
 const Map<String, List<TaxSlab>> slabsByFyAndStatus = {
   '2082-single': [
     TaxSlab(500000, 0.01), // Social Security Tax band

@@ -1,7 +1,10 @@
 // 1. IMPORT FLUTTER CUPERTINO
 import 'package:flutter/cupertino.dart';
 
+import 'package:provider/provider.dart';
+
 import '../data/notices_data.dart';
+import '../state/notices_state.dart';
 import 'apps/widgets/refreshable_list_view.dart';
 import 'apps/widgets/staggered_entrance.dart';
 
@@ -31,6 +34,7 @@ class NoticesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final notices = context.watch<NoticesState>().notices;
     final categoryColors = _categoryColors(context);
     final cardBackground = CupertinoColors.systemGrey6.resolveFrom(context);
     final subtleTextColor = CupertinoColors.systemGrey.resolveFrom(context);
@@ -38,7 +42,7 @@ class NoticesScreen extends StatelessWidget {
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(middle: Text('Notices')),
       child: SafeArea(
-        child: demoNotices.isEmpty
+        child: notices.isEmpty
             ? Center(
                 child: Text(
                   'No notices yet.',
@@ -48,9 +52,9 @@ class NoticesScreen extends StatelessWidget {
             : RefreshableListView.builder(
                 onRefresh: simulatedRefresh,
                 padding: const EdgeInsets.all(16),
-                itemCount: demoNotices.length,
+                itemCount: notices.length,
                 itemBuilder: (context, index) {
-                  final notice = demoNotices[index];
+                  final notice = notices[index];
                   final color = _categoryColor(notice.category, categoryColors);
 
                   return StaggeredEntrance(

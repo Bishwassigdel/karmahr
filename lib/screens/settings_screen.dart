@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../state/app_lock_state.dart';
+import '../state/locale_state.dart';
 import '../state/notification_state.dart';
 import '../state/push_notification_state.dart';
 import '../state/theme_state.dart';
@@ -11,25 +13,25 @@ class SettingsScreen extends StatelessWidget {
 
   // Human-readable label + description for each mode, so the row-building
   // code below doesn't repeat itself three times.
-  String _title(AppThemeMode mode) {
+  String _title(AppLocalizations l10n, AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.system:
-        return 'System Default';
+        return l10n.themeSystem;
       case AppThemeMode.light:
-        return 'Light';
+        return l10n.themeLight;
       case AppThemeMode.dark:
-        return 'Dark';
+        return l10n.themeDark;
     }
   }
 
-  String _subtitle(AppThemeMode mode) {
+  String _subtitle(AppLocalizations l10n, AppThemeMode mode) {
     switch (mode) {
       case AppThemeMode.system:
-        return "Match this iPhone's Light/Dark setting";
+        return l10n.themeSystemSubtitle;
       case AppThemeMode.light:
-        return 'Always use Light appearance';
+        return l10n.themeLightSubtitle;
       case AppThemeMode.dark:
-        return 'Always use Dark appearance';
+        return l10n.themeDarkSubtitle;
     }
   }
 
@@ -57,7 +59,7 @@ class SettingsScreen extends StatelessWidget {
 
     if (wantsEnabled) {
       final verified = await lockState.authenticate(
-        reason: 'Verify to enable App Lock',
+        reason: context.l10n.appLockVerifyReason,
       );
       if (!verified) {
         if (context.mounted) _showCouldNotVerify(context);
@@ -72,16 +74,12 @@ class SettingsScreen extends StatelessWidget {
     showCupertinoDialog(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Could Not Verify'),
-        content: const Text(
-          "App Lock wasn't enabled because we couldn't verify your "
-          'identity. Make sure Face ID, Touch ID, or a device passcode '
-          'is set up, then try again.',
-        ),
+        title: Text(context.l10n.couldNotVerifyTitle),
+        content: Text(context.l10n.couldNotVerifyBody),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
           ),
         ],
       ),
@@ -98,11 +96,8 @@ class SettingsScreen extends StatelessWidget {
     if (!ok && context.mounted) {
       _showSimpleDialog(
         context,
-        title: 'Notifications Not Allowed',
-        message:
-            'KarmaHR needs permission to send notifications. Allow it in '
-            "your phone's Settings app under KarmaHR → Notifications, "
-            'then try again.',
+        title: context.l10n.notificationsNotAllowedTitle,
+        message: context.l10n.notificationsNotAllowedBody,
       );
     }
   }
@@ -111,8 +106,8 @@ class SettingsScreen extends StatelessWidget {
     notifyUser(
       context,
       kind: AppNotificationKind.system,
-      title: 'Test notification',
-      body: 'Push notifications are working. 🎉',
+      title: context.l10n.testNotificationTitle,
+      body: context.l10n.testNotificationBody,
     );
   }
 
@@ -129,7 +124,7 @@ class SettingsScreen extends StatelessWidget {
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(context.l10n.ok),
           ),
         ],
       ),
@@ -143,26 +138,42 @@ class SettingsScreen extends StatelessWidget {
     final themeState = context.watch<ThemeState>();
     final appLock = context.watch<AppLockState>();
     final push = context.watch<PushNotificationState>();
+    final language = context.watch<LocaleState>().language;
+    final l10n = context.l10n;
 
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('Settings')),
+      navigationBar: CupertinoNavigationBar(middle: Text(l10n.settingsTitle)),
       child: SafeArea(
         child: ListView(
           children: [
             const SizedBox(height: 20),
             CupertinoListSection.insetGrouped(
-              header: const Text('APPEARANCE'),
-              footer: const Text(
-                'Choose how KarmaHR looks. "System Default" switches '
-                'automatically with your phone — pick Light or Dark to '
-                'keep it fixed no matter what your phone is set to.',
-              ),
+              header: Text(l10n.languageHeader),
+              footer: Text(l10n.languageFooter),
+              children: AppLanguage.values.map((option) {
+                return CupertinoListTile(
+                  leading: const Icon(CupertinoIcons.globe),
+                  title: Text(option.nativeName),
+                  trailing: option == language
+                      ? const Icon(
+                          CupertinoIcons.check_mark,
+                          color: CupertinoColors.activeGreen,
+                        )
+                      : null,
+                  onTap: () =>
+                      context.read<LocaleState>().setLanguage(option),
+                );
+              }).toList(),
+            ),
+            CupertinoListSection.insetGrouped(
+              header: Text(l10n.appearanceHeader),
+              footer: Text(l10n.appearanceFooter),
               children: AppThemeMode.values.map((mode) {
                 final isSelected = themeState.mode == mode;
                 return CupertinoListTile(
                   leading: Icon(_icon(mode)),
-                  title: Text(_title(mode)),
-                  subtitle: Text(_subtitle(mode)),
+                  title: Text(_title(l10n, mode)),
+                  subtitle: Text(_subtitle(l10n, mode)),
                   trailing: isSelected
                       ? const Icon(
                           CupertinoIcons.check_mark,
@@ -174,19 +185,16 @@ class SettingsScreen extends StatelessWidget {
               }).toList(),
             ),
             CupertinoListSection.insetGrouped(
-              header: const Text('SECURITY'),
+              header: Text(l10n.securityHeader),
               footer: Text(
                 appLock.deviceSupportsAuth == false
-                    ? "Face ID, Touch ID, and a device passcode aren't "
-                          'available on this device — App Lock can\'t be '
-                          'turned on here.'
-                    : 'Require Face ID, Touch ID, or your device passcode '
-                          'every time KarmaHR is opened.',
+                    ? l10n.appLockUnavailableFooter
+                    : l10n.appLockFooter,
               ),
               children: [
                 CupertinoListTile(
                   leading: const Icon(CupertinoIcons.lock_shield),
-                  title: const Text('App Lock'),
+                  title: Text(l10n.appLock),
                   trailing: appLock.deviceSupportsAuth == null
                       ? const CupertinoActivityIndicator()
                       : CupertinoSwitch(
@@ -199,19 +207,16 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
             CupertinoListSection.insetGrouped(
-              header: const Text('NOTIFICATIONS'),
+              header: Text(l10n.notificationsHeader),
               footer: Text(
                 push.isLoaded && !push.pluginReady
-                    ? "Notifications aren't available on this device."
-                    : 'Get reminders to check out, event reminders, and '
-                          'updates on your requests — even when KarmaHR '
-                          'is closed. Everything also appears in the '
-                          'in-app inbox either way.',
+                    ? l10n.pushUnavailableFooter
+                    : l10n.pushFooter,
               ),
               children: [
                 CupertinoListTile(
                   leading: const Icon(CupertinoIcons.bell),
-                  title: const Text('Push Notifications'),
+                  title: Text(l10n.pushNotifications),
                   trailing: !push.isLoaded
                       ? const CupertinoActivityIndicator()
                       : CupertinoSwitch(
@@ -224,7 +229,7 @@ class SettingsScreen extends StatelessWidget {
                 if (push.enabled)
                   CupertinoListTile(
                     leading: const Icon(CupertinoIcons.paperplane),
-                    title: const Text('Send Test Notification'),
+                    title: Text(l10n.sendTestNotification),
                     onTap: () => _sendTestNotification(context),
                   ),
               ],

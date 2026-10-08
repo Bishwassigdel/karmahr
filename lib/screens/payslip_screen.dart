@@ -1,6 +1,8 @@
 // 1. IMPORT FLUTTER CUPERTINO
 import 'package:flutter/cupertino.dart';
 
+import '../l10n/l10n.dart';
+
 import '../data/current_employee.dart';
 import '../domain/nepal/payroll_calculator.dart';
 import '../domain/pdf_documents.dart';
@@ -273,7 +275,7 @@ class _PayslipDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-          child: const Icon(CupertinoIcons.share),
+          child: Icon(CupertinoIcons.share, semanticLabel: context.l10n.a11yShareSlip),
         ),
       ),
       child: SafeArea(

@@ -13,6 +13,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:nepali_utils/nepali_utils.dart';
 
+import '../domain/nepal/bs_dates.dart';
+
 import '../data/calendar_data.dart';
 import '../domain/nepal/fiscal_year.dart';
 import '../domain/nepal/leave_policy.dart';
@@ -86,7 +88,7 @@ class LeaveBalanceState extends ChangeNotifier {
       if (day.weekday != saturday && !isHoliday) {
         count++;
       }
-      day = day.add(const Duration(days: 1));
+      day = bsAddDays(day, 1);
     }
     return count;
   }
@@ -118,7 +120,7 @@ class LeaveBalanceState extends ChangeNotifier {
     NepaliFiscalYear? fiscalYear,
   }) {
     final fy = fiscalYear ?? NepaliFiscalYear.current();
-    final today = NepaliDateTime.now();
+    final today = bsToday();
     final asOf = fy.contains(today) ? today : fy.end;
     final workedSoFar = estimatedWorkingDays(fy.start, asOf);
 

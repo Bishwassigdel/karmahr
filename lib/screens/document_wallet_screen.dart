@@ -5,6 +5,8 @@
 // already-unlocked phone.
 
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../state/app_lock_state.dart';
@@ -62,7 +64,7 @@ class _DocumentWalletScreenState extends State<DocumentWalletScreen> {
                   context,
                   CupertinoPageRoute(builder: (_) => const AddDocumentScreen()),
                 ),
-                child: const Icon(CupertinoIcons.add),
+                child: Icon(CupertinoIcons.add, semanticLabel: context.l10n.a11yAddDocument),
               )
             : null,
       ),

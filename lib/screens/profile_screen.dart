@@ -1,10 +1,12 @@
-// 1. IMPORT FLUTTER CUPERTINO
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../data/calendar_data.dart';
 import '../data/current_employee.dart';
 import '../domain/pdf_documents.dart';
+import '../l10n/l10n.dart';
+import '../state/document_wallet_state.dart';
+import '../state/emergency_info_state.dart';
 import '../state/hr_request_state.dart';
 import '../state/notification_state.dart';
 import '../theme/app_colors.dart';
@@ -12,233 +14,311 @@ import 'apps/widgets/pdf_actions.dart';
 import 'apps/widgets/ui_kit.dart';
 import 'document_wallet_screen.dart';
 import 'emergency_info_screen.dart';
+import 'payslip_screen.dart';
+import 'tax_planner_screen.dart';
 
-// 2. PROFILE SCREEN
+/// The tabs of My Info, left to right.
+enum _InfoTab { job, contact, pay, docs, emergency }
+
+// MY INFO — everything about you on one page: a header, then tabs
+// (Job · Contact · Pay · Docs · Emergency). Replaces jumping between
+// Profile, Payslips, Document Wallet and Emergency Info; those screens
+// are still one tap away from their tab for the full detail.
 //
-// Job Title, Department, Manager, Joining Date, Employment Type, and
-// Work Location stay read-only — those are HR/company-controlled in
-// a real system, not self-editable. Phone Number IS editable:
-// submitting a change reuses the existing "Address/Contact Update"
-// HR request flow instead of a separate approval system, so it shows
-// up correctly in Request History and My Requests too.
-class ProfileScreen extends StatelessWidget {
+// Job details stay read-only (HR-controlled). The phone number is
+// editable: a change files an "Address/Contact Update" HR request, so it
+// shows up in Requests and only applies once HR approves it.
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
-  // The "official" phone number on file — stays fixed until HR
-  // actually approves a change (which, with no backend/Manager
-  // portal yet, doesn't happen automatically). What the employee
-  // sees reflects reality: their request is pending, not yet applied.
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // The "official" phone number on file — stays fixed until HR approves
+  // a change (which, with no backend yet, doesn't happen automatically).
   static const _officialPhone = '+977 97xxxxxxxx';
+
+  _InfoTab _tab = _InfoTab.job;
+
+  String _tabLabel(AppLocalizations l10n, _InfoTab tab) => switch (tab) {
+    _InfoTab.job => l10n.infoTabJob,
+    _InfoTab.contact => l10n.infoTabContact,
+    _InfoTab.pay => l10n.infoTabPay,
+    _InfoTab.docs => l10n.infoTabDocs,
+    _InfoTab.emergency => l10n.infoTabEmergency,
+  };
+
+  void _open(Widget screen) {
+    Navigator.push(context, CupertinoPageRoute(builder: (_) => screen));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final hrRequests = context.watch<HrRequestState>().requests;
+    final l10n = context.l10n;
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(middle: Text(l10n.myInfoTitle)),
+      child: SafeArea(
+        child: ListView(
+          children: [
+            const _Header(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<_InfoTab>(
+                  groupValue: _tab,
+                  onValueChanged: (t) {
+                    if (t != null) setState(() => _tab = t);
+                  },
+                  children: {
+                    for (final t in _InfoTab.values)
+                      t: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Text(
+                          _tabLabel(l10n, t),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                  },
+                ),
+              ),
+            ),
+            ...switch (_tab) {
+              _InfoTab.job => _jobTab(l10n),
+              _InfoTab.contact => _contactTab(context, l10n),
+              _InfoTab.pay => _payTab(l10n),
+              _InfoTab.docs => _docsTab(context, l10n),
+              _InfoTab.emergency => _emergencyTab(context, l10n),
+            },
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
 
-    // The most recent still-pending phone update, if any — used to
-    // show a "Pending HR Approval" note instead of silently dropping
-    // the fact that a request was submitted.
-    final pendingPhoneRequests = hrRequests
+  CupertinoListTile _row(IconData icon, String value, String label) {
+    return CupertinoListTile(
+      leading: Icon(icon),
+      title: Text(value, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(label),
+    );
+  }
+
+  CupertinoListTile _link(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    String? subtitle,
+  }) {
+    return CupertinoListTile(
+      leading: Icon(icon),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: subtitle == null
+          ? null
+          : Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: const CupertinoListTileChevron(),
+      onTap: onTap,
+    );
+  }
+
+  List<Widget> _jobTab(AppLocalizations l10n) {
+    final e = currentEmployee;
+    final joined =
+        '${adMonths[e.joiningDate.month - 1]} ${e.joiningDate.day}, '
+        '${e.joiningDate.year}';
+    return [
+      CupertinoListSection.insetGrouped(
+        children: [
+          _row(CupertinoIcons.briefcase_fill, e.jobTitle, l10n.jobTitleLabel),
+          _row(
+            CupertinoIcons.building_2_fill,
+            e.department,
+            l10n.departmentLabel,
+          ),
+          _row(CupertinoIcons.person_2, e.manager, l10n.managerLabel),
+          _row(CupertinoIcons.calendar_today, joined, l10n.joinedLabel),
+          _row(
+            CupertinoIcons.doc_text,
+            e.employmentType,
+            l10n.employmentTypeLabel,
+          ),
+          _row(
+            CupertinoIcons.location_solid,
+            e.workLocation,
+            l10n.workLocationLabel,
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _contactTab(BuildContext context, AppLocalizations l10n) {
+    final hrRequests = context.watch<HrRequestState>().requests;
+    // The most recent still-pending phone update, if any.
+    final pending = hrRequests
         .where(
           (r) =>
               r.category == RequestCategory.addressUpdate &&
               r.status == RequestStatus.pending &&
               r.newPhone != null,
         )
-        .toList();
-    final pendingPhone = pendingPhoneRequests.isEmpty
-        ? null
-        : pendingPhoneRequests.first.newPhone;
+        .map((r) => r.newPhone!)
+        .firstOrNull;
 
-    return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(middle: Text('Profile')),
-
-      child: SafeArea(
-        child: ListView(
-          children: [
-            const SizedBox(height: 24),
-
-            // 3. AVATAR + NAME + EMPLOYEE ID
-            Center(
-              child: Column(
-                children: [
-                  Container(
-                    width: 88,
-                    height: 88,
-                    decoration: const BoxDecoration(
-                      color: AppColors.karmaRed,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        currentEmployee.name
-                            .split(' ')
-                            .map((w) => w[0])
-                            .take(2)
-                            .join(),
-                        style: TextStyle(
-                          color: CupertinoColors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 14),
-
-                  Text(
-                    currentEmployee.name,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  Text(
-                    'Employee ID: ${currentEmployee.employeeId}',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: CupertinoColors.systemGrey,
-                    ),
-                  ),
-                ],
+    return [
+      CupertinoListSection.insetGrouped(
+        footer: pending == null
+            ? null
+            : Text(
+                l10n.pendingHrApproval(pending),
+                style: const TextStyle(
+                  color: CupertinoColors.systemOrange,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // 4. EMPLOYMENT INFO — unchanged, stays read-only.
-            CupertinoListSection.insetGrouped(
-              header: const Text('EMPLOYMENT'),
-              // From the shared profile — the same object the payslip and
-              // salary certificate PDFs print, so they can't disagree.
-              children: [
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.briefcase_fill),
-                  title: Text(currentEmployee.jobTitle),
-                  subtitle: const Text('Job Title'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.building_2_fill),
-                  title: Text(currentEmployee.department),
-                  subtitle: const Text('Department'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.person_2),
-                  title: Text(currentEmployee.manager),
-                  subtitle: const Text('Manager'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.calendar_today),
-                  title: Text(
-                    '${adMonths[currentEmployee.joiningDate.month - 1]} '
-                    '${currentEmployee.joiningDate.day}, '
-                    '${currentEmployee.joiningDate.year}',
+        children: [
+          _row(CupertinoIcons.mail, currentEmployee.email, l10n.workEmailLabel),
+          CupertinoListTile(
+            leading: const Icon(CupertinoIcons.phone),
+            title: const Text(_officialPhone),
+            subtitle: Text(l10n.phoneLabel),
+            trailing: pending != null
+                ? const Icon(
+                    CupertinoIcons.clock,
+                    color: CupertinoColors.systemOrange,
+                    size: 20,
+                  )
+                : CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () => _showEditPhoneSheet(context),
+                    child: Text(l10n.editAction),
                   ),
-                  subtitle: const Text('Joining Date'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.doc_text),
-                  title: Text(currentEmployee.employmentType),
-                  subtitle: const Text('Employment Type'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.location_solid),
-                  title: Text(currentEmployee.workLocation),
-                  subtitle: const Text('Work Location'),
-                ),
-              ],
-            ),
-
-            // 5. CONTACT INFO — Phone Number is now editable.
-            CupertinoListSection.insetGrouped(
-              header: const Text('CONTACT'),
-              footer: pendingPhone == null
-                  ? null
-                  : Text(
-                      'Pending HR approval: $pendingPhone',
-                      style: const TextStyle(
-                        color: CupertinoColors.systemOrange,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-              children: [
-                const CupertinoListTile(
-                  leading: Icon(CupertinoIcons.mail),
-                  title: Text('bishwas.sigdel@karmahr.com'),
-                  subtitle: Text('Work Email'),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.phone),
-                  title: const Text(_officialPhone),
-                  subtitle: const Text('Phone Number'),
-                  trailing: pendingPhone != null
-                      ? const Icon(
-                          CupertinoIcons.clock,
-                          color: CupertinoColors.systemOrange,
-                          size: 20,
-                        )
-                      : CupertinoButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => _showEditPhoneSheet(context),
-                          child: const Text('Edit'),
-                        ),
-                ),
-              ],
-            ),
-
-            // 5b. DOCUMENTS — self-service letters that used to mean
-            // emailing HR and waiting days.
-            CupertinoListSection.insetGrouped(
-              header: const Text('DOCUMENTS'),
-              footer: const Text(
-                'Salary certificates are generated instantly as a PDF, '
-                'marked as a draft until HR signs and seals them.',
-              ),
-              children: [
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.doc_richtext),
-                  title: const Text('Salary Certificate'),
-                  subtitle: const Text('For bank loans, visas & verification'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => showPdfActions(
-                    context,
-                    title: 'Salary Certificate',
-                    filename:
-                        'salary-certificate-${currentEmployee.employeeId}.pdf',
-                    build: () => buildSalaryCertificatePdf(),
-                  ),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.folder_fill),
-                  title: const Text('Document Wallet'),
-                  subtitle: const Text('PAN, citizenship, contract & more'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) => const DocumentWalletScreen(),
-                    ),
-                  ),
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.heart_circle_fill),
-                  title: const Text('Emergency & Insurance'),
-                  subtitle: const Text('Emergency contacts & health card'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (_) => const EmergencyInfoScreen(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ];
+  }
+
+  List<Widget> _payTab(AppLocalizations l10n) {
+    final e = currentEmployee;
+    CupertinoListTile money(String label, double amount, {bool bold = false}) {
+      return CupertinoListTile(
+        title: Text(
+          label,
+          style: bold ? const TextStyle(fontWeight: FontWeight.w600) : null,
+        ),
+        additionalInfo: TileInfo(formatRupees(amount)),
+      );
+    }
+
+    return [
+      CupertinoListSection.insetGrouped(
+        children: [
+          money(l10n.basicSalaryLabel, e.basicSalary),
+          money(l10n.dearnessAllowanceLabel, e.dearnessAllowance),
+          money(l10n.transportAllowanceLabel, e.transportAllowance),
+          money(l10n.grossMonthlyLabel, e.grossMonthly, bold: true),
+        ],
+      ),
+      CupertinoListSection.insetGrouped(
+        children: [
+          _link(
+            CupertinoIcons.money_dollar_circle,
+            l10n.payslipsLabel,
+            () => _open(const PayslipScreen()),
+          ),
+          _link(
+            CupertinoIcons.chart_bar_alt_fill,
+            l10n.taxPlannerLabel,
+            () => _open(const TaxPlannerScreen()),
+          ),
+          _link(
+            CupertinoIcons.doc_richtext,
+            l10n.salaryCertificateLabel,
+            () => showPdfActions(
+              context,
+              title: 'Salary Certificate',
+              filename: 'salary-certificate-${e.employeeId}.pdf',
+              build: () => buildSalaryCertificatePdf(),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _docsTab(BuildContext context, AppLocalizations l10n) {
+    final docs = context.watch<DocumentWalletState>().documents;
+    return [
+      CupertinoListSection.insetGrouped(
+        children: [
+          if (docs.isEmpty)
+            CupertinoListTile(title: Text(l10n.noDocuments))
+          else
+            for (final d in docs)
+              CupertinoListTile(
+                leading: Icon(walletDocTypeIcon(d.type)),
+                title: Text(
+                  d.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  d.number == null
+                      ? walletDocTypeLabel(d.type)
+                      : maskIdNumber(d.number!),
+                ),
+              ),
+        ],
+      ),
+      CupertinoListSection.insetGrouped(
+        children: [
+          _link(
+            CupertinoIcons.folder_fill,
+            l10n.manageDocuments,
+            () => _open(const DocumentWalletScreen()),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  List<Widget> _emergencyTab(BuildContext context, AppLocalizations l10n) {
+    final info = context.watch<EmergencyInfoState>();
+    final ins = info.insurance;
+    return [
+      CupertinoListSection.insetGrouped(
+        header: Text(l10n.emergencyContactsLabel.toUpperCase()),
+        children: [
+          for (final c in info.contacts)
+            _row(
+              CupertinoIcons.person_crop_circle_fill,
+              c.name,
+              '${c.relation} · ${c.phone}',
+            ),
+        ],
+      ),
+      CupertinoListSection.insetGrouped(
+        header: Text(l10n.healthInsuranceLabel.toUpperCase()),
+        children: [
+          _row(
+            CupertinoIcons.heart_circle_fill,
+            ins.planName,
+            '${ins.provider} · ${ins.memberId}',
+          ),
+          _link(
+            CupertinoIcons.pencil,
+            l10n.manageEmergency,
+            () => _open(const EmergencyInfoScreen()),
+          ),
+        ],
+      ),
+    ];
   }
 
   // 6. EDIT PHONE SHEET
@@ -365,6 +445,69 @@ class _EditPhoneSheetState extends State<_EditPhoneSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Photo-style header: initials, name, role, staff ID.
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) {
+    final e = currentEmployee;
+    final initials = e.name
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .map((w) => w[0])
+        .take(2)
+        .join();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+      child: Column(
+        children: [
+          Container(
+            width: 84,
+            height: 84,
+            decoration: const BoxDecoration(
+              color: AppColors.karmaRed,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              initials,
+              style: const TextStyle(
+                color: CupertinoColors.white,
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            e.name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '${e.jobTitle} · ${e.department}',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: CupertinoColors.systemGrey.resolveFrom(context),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            context.l10n.staffIdValue(e.employeeId),
+            style: TextStyle(
+              fontSize: 12.5,
+              color: CupertinoColors.systemGrey.resolveFrom(context),
+            ),
+          ),
+        ],
       ),
     );
   }

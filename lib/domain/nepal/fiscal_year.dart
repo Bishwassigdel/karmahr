@@ -9,6 +9,8 @@
 
 import 'package:nepali_utils/nepali_utils.dart';
 
+import 'bs_dates.dart';
+
 /// One Nepali fiscal year, identified by its starting BS year.
 /// e.g. `NepaliFiscalYear(2083)` is FY 2083/84 (Shrawan 2083 → Ashad 2084).
 class NepaliFiscalYear {
@@ -24,8 +26,7 @@ class NepaliFiscalYear {
   }
 
   /// The fiscal year "today" (device clock) falls in.
-  factory NepaliFiscalYear.current() =>
-      NepaliFiscalYear.of(NepaliDateTime.now());
+  factory NepaliFiscalYear.current() => NepaliFiscalYear.of(bsToday());
 
   /// Shrawan 1 of [startYear] — always a valid BS date (day 1 of a month
   /// is never affected by variable month lengths).
@@ -42,10 +43,7 @@ class NepaliFiscalYear {
     final oneDayBefore = nextFiscalYearStart.toDateTime().subtract(
       const Duration(days: 1),
     );
-    // toNepaliDateTime() shifts into Nepal time (+5:45), so outside NPT it
-    // carries a stray time of day. Keep only the date part.
-    final bs = oneDayBefore.toNepaliDateTime();
-    return NepaliDateTime(bs.year, bs.month, bs.day);
+    return bsFromAd(oneDayBefore);
   }
 
   /// Nepali fiscal quarter (1–4) a BS date falls in: Q1 is Shrawan–Ashwin,
@@ -75,23 +73,28 @@ class NepaliFiscalYear {
 
   /// Convenience for AD dates (e.g. LeaveRequest.startDate), since most
   /// existing app state stores plain DateTime, not NepaliDateTime.
-  bool containsAdDate(DateTime adDate) => contains(adDate.toNepaliDateTime());
+  bool containsAdDate(DateTime adDate) => contains(bsFromAd(adDate));
 
   /// Number of calendar days between [start] and [end], inclusive.
   /// Useful as the denominator for "days elapsed so far this FY" style
   /// progress calculations.
-  int get totalDays =>
-      end.toDateTime().difference(start.toDateTime()).inDays + 1;
+  int get totalDays => _dayNumber(end) - _dayNumber(start) + 1;
 
   /// Number of days from [start] up to and including [date], clamped to
   /// this fiscal year's range. Returns 0 if [date] is before [start].
   int daysElapsedAt(NepaliDateTime date) {
-    final instant = date.toDateTime();
-    if (instant.isBefore(start.toDateTime())) return 0;
-    final clamped = instant.isAfter(end.toDateTime())
-        ? end.toDateTime()
-        : instant;
-    return clamped.difference(start.toDateTime()).inDays + 1;
+    final day = _dayNumber(date);
+    if (day < _dayNumber(start)) return 0;
+    final clamped = day > _dayNumber(end) ? _dayNumber(end) : day;
+    return clamped - _dayNumber(start) + 1;
+  }
+
+  // Days since 1970 for a BS date's calendar day. UTC, so daylight saving
+  // can't make a day 23 hours long and throw the count off by one.
+  static int _dayNumber(NepaliDateTime d) {
+    final ad = d.toDateTime();
+    return DateTime.utc(ad.year, ad.month, ad.day).millisecondsSinceEpoch ~/
+        Duration.millisecondsPerDay;
   }
 
   @override

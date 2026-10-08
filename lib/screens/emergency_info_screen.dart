@@ -2,6 +2,8 @@
 // all one tap from a call. Everything here works with no network.
 
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../data/current_employee.dart';
@@ -53,7 +55,10 @@ class EmergencyInfoScreen extends StatelessWidget {
                           context.read<EmergencyInfoState>().remove(c.id);
                         }
                       },
-                      child: const Icon(CupertinoIcons.ellipsis_circle),
+                      child: Icon(
+                        CupertinoIcons.ellipsis_circle,
+                        semanticLabel: context.l10n.a11yRemoveContact,
+                      ),
                     ),
                     onTap: () => callNumber(context, c.phone),
                   ),

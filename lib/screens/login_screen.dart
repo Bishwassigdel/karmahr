@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
-import 'main_nav_screen.dart';
+import '../l10n/l10n.dart';
+import '../state/auth_state.dart';
+import 'portal_home.dart';
 import '../theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -23,6 +26,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // This controls whether the password is hidden or visible
   bool _obscurePassword = true;
+
+  // DEMO ONLY: which portal to open. Goes away once the backend returns
+  // the real role on login.
+  UserRole _demoRole = UserRole.employee;
 
   // ============================================================
   // DISPOSE
@@ -54,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(context.l10n.ok),
             ),
           ],
         );
@@ -128,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // its light-mode value, even in Dark Mode.
     final background = AppColors.background.resolveFrom(context);
     final textPrimary = AppColors.textPrimary.resolveFrom(context);
+    final l10n = context.l10n;
 
     return CupertinoPageScaffold(
       backgroundColor: background,
@@ -183,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // PAGE TITLE
               // ==================================================
               Text(
-                'Sign in to KarmaHR',
+                l10n.loginTitle,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -197,9 +205,9 @@ class _LoginScreenState extends State<LoginScreen> {
               // ==================================================
               // SUBTITLE
               // ==================================================
-              const Text(
-                'Enter your staff credentials to continue',
-                style: TextStyle(
+              Text(
+                l10n.loginSubtitle,
+                style: const TextStyle(
                   fontSize: 14,
                   color: CupertinoColors.systemGrey,
                   decoration: TextDecoration.none,
@@ -212,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // STAFF ID LABEL
               // ==================================================
               Text(
-                'Staff ID',
+                l10n.staffIdLabel,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -228,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // ==================================================
               _buildField(
                 controller: _staffIdController,
-                placeholder: 'e.g. MB-24071',
+                placeholder: l10n.staffIdHint,
                 icon: CupertinoIcons.person,
               ),
 
@@ -238,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // PASSWORD LABEL
               // ==================================================
               Text(
-                'Password',
+                l10n.passwordLabel,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -254,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // ==================================================
               _buildField(
                 controller: _passwordController,
-                placeholder: 'Enter your password',
+                placeholder: l10n.passwordHint,
                 icon: CupertinoIcons.lock,
 
                 // Hide/show password
@@ -277,6 +285,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     _obscurePassword
                         ? CupertinoIcons.eye
                         : CupertinoIcons.eye_slash,
+                    semanticLabel: _obscurePassword
+                        ? l10n.a11yShowPassword
+                        : l10n.a11yHidePassword,
 
                     size: 19,
 
@@ -299,18 +310,67 @@ class _LoginScreenState extends State<LoginScreen> {
                   minimumSize: Size.zero,
 
                   onPressed: () {
-                    _showMessage('Forgot password isn\'t available yet.');
+                    _showMessage(l10n.forgotPasswordUnavailable);
                   },
 
-                  child: const Text(
-                    'Forgot password?',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.forgotPassword,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFFC62828),
                       decoration: TextDecoration.none,
                     ),
                   ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // ==================================================
+              // DEMO ROLE PICKER
+              // ==================================================
+              Text(
+                l10n.demoRoleLabel,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimary,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoSlidingSegmentedControl<UserRole>(
+                  groupValue: _demoRole,
+                  onValueChanged: (role) {
+                    if (role != null) setState(() => _demoRole = role);
+                  },
+                  children: {
+                    for (final role in demoLoginRoles)
+                      role: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Text(
+                          role.label(l10n),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 6),
+
+              Text(
+                l10n.demoRoleNote,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.systemGrey,
+                  decoration: TextDecoration.none,
                 ),
               ),
 
@@ -334,7 +394,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     // TEMPORARY LOGIN
                     // =================================================
                     //
-                    // Currently this directly opens MainNavScreen.
+                    // Currently this signs in with the demo role and
+                    // opens that role's portal.
                     //
                     // Later, this is where you will:
                     // 1. Validate Staff ID
@@ -345,19 +406,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     //
                     // =================================================
 
+                    context.read<AuthState>().signIn(_demoRole);
                     Navigator.pushReplacement(
                       context,
 
                       CupertinoPageRoute(
-                        builder: (context) => const MainNavScreen(),
+                        builder: (context) => portalHomeFor(_demoRole),
                       ),
                     );
                   },
 
-                  child: const Text(
-                    'Sign In',
+                  child: Text(
+                    l10n.signIn,
 
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
 
@@ -388,13 +450,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Divider text — Flexible so it can wrap instead of
                   // pushing the divider lines off a narrow screen.
-                  const Flexible(
+                  Flexible(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Text(
-                        'or continue with SSO',
+                        l10n.ssoDivider,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: CupertinoColors.systemGrey,
                           decoration: TextDecoration.none,
@@ -431,7 +493,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Connect, or an Enterprise Identity Provider — none
                   // of that exists yet, so this just says so for now.
                   onPressed: () {
-                    _showMessage('SSO sign-in isn\'t available yet.');
+                    _showMessage(l10n.ssoUnavailable);
                   },
 
                   child: Row(
@@ -450,7 +512,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // SSO button text
                       Flexible(
                         child: Text(
-                          'Continue with SSO',
+                          l10n.continueWithSso,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
