@@ -28,6 +28,7 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4
   image_picker: ^1.1.2
+  supabase_flutter: ^2.18.0
 
 
 dev_dependencies:

@@ -12,7 +12,7 @@ import 'owner_phone_shell.dart';
 import 'owner_section.dart';
 import 'owner_section_view.dart';
 
-/// Home of the CEO portal. Wide screens get a sidebar listing every
+/// Home of the Executive portal. Wide screens get a sidebar listing every
 /// section; phones get a bottom tab bar (see OwnerPhoneShell).
 class OwnerPortalScreen extends StatefulWidget {
   const OwnerPortalScreen({super.key});

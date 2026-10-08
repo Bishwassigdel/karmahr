@@ -8,6 +8,7 @@ import '../../l10n/l10n.dart';
 enum HrSection {
   overview(CupertinoIcons.chart_pie),
   employees(CupertinoIcons.person_2),
+  teams(CupertinoIcons.person_3),
   leave(CupertinoIcons.calendar),
   payroll(CupertinoIcons.money_dollar_circle),
   attendance(CupertinoIcons.clock),
@@ -23,6 +24,7 @@ enum HrSection {
   String label(AppLocalizations l10n) => switch (this) {
     HrSection.overview => l10n.hrSectionOverview,
     HrSection.employees => l10n.hrSectionEmployees,
+    HrSection.teams => l10n.hrSectionTeams,
     HrSection.leave => l10n.hrSectionLeave,
     HrSection.payroll => l10n.hrSectionPayroll,
     HrSection.attendance => l10n.hrSectionAttendance,

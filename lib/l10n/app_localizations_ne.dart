@@ -902,7 +902,7 @@ class AppLocalizationsNe extends AppLocalizations {
   String get hrAuditEmployeesImported => 'कर्मचारी आयात गरियो';
 
   @override
-  String get roleOwner => 'सीईओ';
+  String get roleOwner => 'कार्यकारी';
 
   @override
   String get ownerSecOverview => 'सारांश';
@@ -1633,4 +1633,88 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get hrNoNewJoiners => 'पछिल्लो ३० दिनमा कोही सामेल भएका छैनन्।';
+
+  @override
+  String get hrSectionTeams => 'टोलीहरू';
+
+  @override
+  String get hrNewTeam => 'नयाँ टोली';
+
+  @override
+  String get hrTeamName => 'टोलीको नाम';
+
+  @override
+  String get hrTeamNameProblem => 'अरू टोलीले नलिएको टोलीको नाम लेख्नुहोस्।';
+
+  @override
+  String get hrTeamsEmpty =>
+      'अहिलेसम्म कुनै टोली छैन। एउटा बनाउनुहोस्, मान्छे थप्नुहोस् र को प्रमुख हुने छान्नुहोस्।';
+
+  @override
+  String hrTeamMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count सदस्य',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hrNoHead => 'प्रमुख छैन';
+
+  @override
+  String get hrTeamHead => 'टोली प्रमुख';
+
+  @override
+  String get hrRenameTeam => 'नाम बदल्नुहोस्';
+
+  @override
+  String get hrAddMember => 'सदस्य थप्नुहोस्';
+
+  @override
+  String get hrNoOneToAdd => 'सबै यो टोलीमा पहिले नै छन्।';
+
+  @override
+  String get hrMakeHead => 'टोली प्रमुख बनाउनुहोस्';
+
+  @override
+  String get hrRemoveHead => 'प्रमुखबाट हटाउनुहोस्';
+
+  @override
+  String get hrRemoveFromTeam => 'टोलीबाट हटाउनुहोस्';
+
+  @override
+  String hrHeadElsewhere(String name, String team) {
+    return '$name पहिले नै $team को प्रमुख हुनुहुन्छ। एक व्यक्ति एउटै टोलीको प्रमुख हुन सक्छ।';
+  }
+
+  @override
+  String get hrDeleteTeam => 'टोली मेट्नुहोस्';
+
+  @override
+  String hrDeleteTeamTitle(String name) {
+    return '$name मेट्ने?';
+  }
+
+  @override
+  String get hrDeleteTeamBody =>
+      'टोली हटाइन्छ। यसमा भएका मान्छेलाई असर पर्दैन।';
+
+  @override
+  String get hrTeamHint =>
+      'प्रमुख बनाउन वा हटाउन व्यक्तिमा थिच्नुहोस्। प्रमुखले अन्य सदस्यलाई काम दिन सक्छन्।';
+
+  @override
+  String get hrTeamNeedsHead =>
+      'यो टोलीको प्रमुख छैन, त्यसैले कसैले यसका सदस्यलाई काम दिन सक्दैन।';
+
+  @override
+  String get hrAuditTeamCreated => 'टोली बनाइयो';
+
+  @override
+  String get hrAuditTeamUpdated => 'टोली परिवर्तन भयो';
+
+  @override
+  String get hrAuditTeamDeleted => 'टोली मेटाइयो';
 }

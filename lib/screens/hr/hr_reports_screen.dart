@@ -39,6 +39,9 @@ String auditActionLabel(AppLocalizations l10n, AuditAction action) {
     AuditAction.applicantHired => l10n.hrAuditApplicantHired,
     AuditAction.employeesImported => l10n.hrAuditEmployeesImported,
     AuditAction.payViewed => l10n.hrAuditPayViewed,
+    AuditAction.teamCreated => l10n.hrAuditTeamCreated,
+    AuditAction.teamUpdated => l10n.hrAuditTeamUpdated,
+    AuditAction.teamDeleted => l10n.hrAuditTeamDeleted,
   };
 }
 
@@ -346,6 +349,9 @@ _AuditGroup _groupOf(AuditAction a) => switch (a) {
   AuditAction.holidayAdded ||
   AuditAction.holidayRemoved ||
   AuditAction.reviewStarted ||
+  AuditAction.teamCreated ||
+  AuditAction.teamUpdated ||
+  AuditAction.teamDeleted ||
   AuditAction.jobPosted => _AuditGroup.company,
 };
 

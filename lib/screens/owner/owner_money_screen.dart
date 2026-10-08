@@ -7,7 +7,7 @@ import '../../l10n/l10n.dart';
 import '../apps/widgets/ui_kit.dart';
 import 'owner_widgets.dart';
 
-/// CEO > Money: what payroll costs, how it has moved, and where it goes.
+/// Executive > Money: what payroll costs, how it has moved, and where it goes.
 class OwnerMoneyScreen extends StatelessWidget {
   const OwnerMoneyScreen({super.key});
 

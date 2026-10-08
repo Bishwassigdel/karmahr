@@ -905,7 +905,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hrAuditEmployeesImported => 'Employees imported';
 
   @override
-  String get roleOwner => 'CEO';
+  String get roleOwner => 'Executive';
 
   @override
   String get ownerSecOverview => 'Overview';
@@ -1648,4 +1648,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hrNoNewJoiners => 'Nobody has joined in the last 30 days.';
+
+  @override
+  String get hrSectionTeams => 'Teams';
+
+  @override
+  String get hrNewTeam => 'New team';
+
+  @override
+  String get hrTeamName => 'Team name';
+
+  @override
+  String get hrTeamNameProblem => 'Enter a team name that no other team uses.';
+
+  @override
+  String get hrTeamsEmpty =>
+      'No teams yet. Make one, add people, and choose who leads it.';
+
+  @override
+  String hrTeamMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hrNoHead => 'No head yet';
+
+  @override
+  String get hrTeamHead => 'Team head';
+
+  @override
+  String get hrRenameTeam => 'Rename';
+
+  @override
+  String get hrAddMember => 'Add a member';
+
+  @override
+  String get hrNoOneToAdd => 'Everyone is already in this team.';
+
+  @override
+  String get hrMakeHead => 'Make team head';
+
+  @override
+  String get hrRemoveHead => 'Remove as head';
+
+  @override
+  String get hrRemoveFromTeam => 'Remove from team';
+
+  @override
+  String hrHeadElsewhere(String name, String team) {
+    return '$name already leads $team. A person can lead only one team.';
+  }
+
+  @override
+  String get hrDeleteTeam => 'Delete team';
+
+  @override
+  String hrDeleteTeamTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get hrDeleteTeamBody =>
+      'The team is removed. The people in it are not affected.';
+
+  @override
+  String get hrTeamHint =>
+      'Tap a person to make them head or remove them. The head can give tasks to the other members.';
+
+  @override
+  String get hrTeamNeedsHead =>
+      'This team has no head yet, so nobody can assign its members tasks.';
+
+  @override
+  String get hrAuditTeamCreated => 'Team created';
+
+  @override
+  String get hrAuditTeamUpdated => 'Team changed';
+
+  @override
+  String get hrAuditTeamDeleted => 'Team deleted';
 }

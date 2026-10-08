@@ -9,8 +9,8 @@ import '../apps/widgets/ui_kit.dart';
 import 'owner_department_screen.dart';
 import 'owner_widgets.dart';
 
-/// CEO > Departments: every department's progress, worst first, filterable
-/// by branch.
+/// Executive > Departments: every department's progress, worst first,
+/// filterable by branch.
 class OwnerDepartmentsScreen extends StatefulWidget {
   const OwnerDepartmentsScreen({super.key});
 

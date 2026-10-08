@@ -1805,7 +1805,7 @@ abstract class AppLocalizations {
   /// No description provided for @roleOwner.
   ///
   /// In en, this message translates to:
-  /// **'CEO'**
+  /// **'Executive'**
   String get roleOwner;
 
   /// No description provided for @ownerSecOverview.
@@ -2911,6 +2911,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nobody has joined in the last 30 days.'**
   String get hrNoNewJoiners;
+
+  /// No description provided for @hrSectionTeams.
+  ///
+  /// In en, this message translates to:
+  /// **'Teams'**
+  String get hrSectionTeams;
+
+  /// No description provided for @hrNewTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'New team'**
+  String get hrNewTeam;
+
+  /// No description provided for @hrTeamName.
+  ///
+  /// In en, this message translates to:
+  /// **'Team name'**
+  String get hrTeamName;
+
+  /// No description provided for @hrTeamNameProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a team name that no other team uses.'**
+  String get hrTeamNameProblem;
+
+  /// No description provided for @hrTeamsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No teams yet. Make one, add people, and choose who leads it.'**
+  String get hrTeamsEmpty;
+
+  /// No description provided for @hrTeamMemberCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}'**
+  String hrTeamMemberCount(int count);
+
+  /// No description provided for @hrNoHead.
+  ///
+  /// In en, this message translates to:
+  /// **'No head yet'**
+  String get hrNoHead;
+
+  /// No description provided for @hrTeamHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Team head'**
+  String get hrTeamHead;
+
+  /// No description provided for @hrRenameTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get hrRenameTeam;
+
+  /// No description provided for @hrAddMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a member'**
+  String get hrAddMember;
+
+  /// No description provided for @hrNoOneToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone is already in this team.'**
+  String get hrNoOneToAdd;
+
+  /// No description provided for @hrMakeHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Make team head'**
+  String get hrMakeHead;
+
+  /// No description provided for @hrRemoveHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove as head'**
+  String get hrRemoveHead;
+
+  /// No description provided for @hrRemoveFromTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from team'**
+  String get hrRemoveFromTeam;
+
+  /// No description provided for @hrHeadElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} already leads {team}. A person can lead only one team.'**
+  String hrHeadElsewhere(String name, String team);
+
+  /// No description provided for @hrDeleteTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete team'**
+  String get hrDeleteTeam;
+
+  /// No description provided for @hrDeleteTeamTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String hrDeleteTeamTitle(String name);
+
+  /// No description provided for @hrDeleteTeamBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The team is removed. The people in it are not affected.'**
+  String get hrDeleteTeamBody;
+
+  /// No description provided for @hrTeamHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a person to make them head or remove them. The head can give tasks to the other members.'**
+  String get hrTeamHint;
+
+  /// No description provided for @hrTeamNeedsHead.
+  ///
+  /// In en, this message translates to:
+  /// **'This team has no head yet, so nobody can assign its members tasks.'**
+  String get hrTeamNeedsHead;
+
+  /// No description provided for @hrAuditTeamCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Team created'**
+  String get hrAuditTeamCreated;
+
+  /// No description provided for @hrAuditTeamUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Team changed'**
+  String get hrAuditTeamUpdated;
+
+  /// No description provided for @hrAuditTeamDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Team deleted'**
+  String get hrAuditTeamDeleted;
 }
 
 class _AppLocalizationsDelegate

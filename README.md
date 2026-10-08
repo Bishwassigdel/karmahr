@@ -144,19 +144,19 @@ KarmaHR is one app with three portals, chosen by the signed-in role
 | Employee | The employee app: tabs **Home** (check-in, needs-you, "What's happening" feed), **Time Off** (balances, Request button, planner, holiday calendar, history), **Time**, **Requests** (every request type in one list), **More** (My Info, Apps, Settings, Log Out). **My Info** is one tabbed profile: Job · Contact · Pay · Docs · Emergency | Done |
 | Manager | The employee app **plus a Team tab** (managers still take leave and check in) | Team tab is a placeholder; approvals come next |
 | HR | The HR portal (`lib/screens/hr/`). Phone: tabs Home (titled KarmaHR, with the notification bell), Employees, Leave, Payroll, More (Notices, Reports, Settings, Log Out). Wide screens: a sidebar with all nine sections | All nine sections built on demo data (see "HR portal" below) |
-| CEO | The CEO portal (`lib/screens/owner/`). Phone: tabs **Overview**, **Departments**, **People**, **Money**, **More** (Activity, Settings, Log Out). Wide screens: the shared sidebar. Departments are scored on progress; the CEO can drill from company to department to branch to person | Built on a made-up 290-person company (demo data) |
+| Executive | The Executive portal (`lib/screens/owner/`). Phone: tabs **Overview**, **Departments**, **People**, **Money**, **More** (Activity, Settings, Log Out). Wide screens: the shared sidebar. Departments are scored on progress; the Executive can drill from company to department to branch to person | Built on a made-up 290-person company (demo data) |
 
 `portalHomeFor(role)` in `lib/screens/portal_home.dart` maps a role to its
 first screen. `confirmLogout()` in `lib/screens/logout.dart` is the one
 logout for every portal. The role picker on the login screen is **demo
 only**: once the backend exists, the role comes from the login response.
 
-### CEO portal
+### Executive portal
 
 Built for a big company: it shows **answers first** and the detail behind
 them, mostly read-only (HR has the tools to act).
 
-| Tab | What the CEO sees |
+| Tab | What the Executive sees |
 |---|---|
 | Overview | Headcount against plan, progress score, attendance, payroll this month against last, people who left in the last year. Under it **Needs attention** (a department behind, high attrition, a department short of people, weak branch attendance, plus the HR portal's live items: requests waiting over 3 days, expiring documents, payroll not approved), then every department **lowest score first** |
 | Departments | A scorecard per department with a branch filter; tap for the score, its four parts, headcount over 12 months, the split by branch, attrition and joiners, and a way to the people |
@@ -171,7 +171,7 @@ on the Departments tab.
 
 **Privacy rules built in.** A group of fewer than 5 people is never broken
 down (it would identify someone). Pay is hidden on a person's page until the
-CEO asks; asking first confirms, and **every view of someone's pay is written
+Executive asks; asking first confirms, and **every view of someone's pay is written
 to the audit log**.
 
 **The demo company.** `lib/data/company_demo.dart` makes about 290 people in
@@ -309,7 +309,7 @@ lib/
 │   ├── calendar_data.dart             # BS calendar markers, holidays
 │   ├── current_employee.dart          # employee details + salary, one place
 │   ├── attendance_demo.dart           # demo attendance, from ID + date
-│   ├── company_demo.dart              # the 290-person demo company (CEO portal)
+│   ├── company_demo.dart              # the 290-person demo company (Executive portal)
 │   ├── employee_directory_data.dart
 │   ├── notices_data.dart
 │   └── team_data.dart                 # team leave, celebrations, events
@@ -355,7 +355,7 @@ lib/
     ├── time_off_screen.dart           # Time Off hub
     ├── requests_screen.dart           # Requests hub (leave, expense, overtime, HR)
     ├── profile_screen.dart            # My Info (tabbed)
-    ├── owner/                         # CEO portal
+    ├── owner/                         # Executive portal
     │   ├── owner_portal_screen.dart   # wide: sidebar; phone: OwnerPhoneShell
     │   ├── owner_phone_shell.dart     # phone tabs + More
     │   ├── owner_overview / departments / department / people / person

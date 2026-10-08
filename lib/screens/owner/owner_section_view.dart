@@ -7,7 +7,7 @@ import 'owner_overview_screen.dart';
 import 'owner_people_screen.dart';
 import 'owner_section.dart';
 
-/// The body of one CEO section, shared by the sidebar and phone layouts.
+/// The body of one Executive section, shared by the sidebar and phone layouts.
 /// The switch has no default: adding a section stops the build until its
 /// screen is wired in here.
 class OwnerSectionView extends StatelessWidget {

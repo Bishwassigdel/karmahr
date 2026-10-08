@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../l10n/l10n.dart';
 
-/// The sections of the CEO portal, in sidebar order. On a phone the first
+/// The sections of the Executive portal, in sidebar order. On a phone the first
 /// four are tabs and Activity lives under More.
 enum OwnerSection {
   overview(CupertinoIcons.chart_pie),

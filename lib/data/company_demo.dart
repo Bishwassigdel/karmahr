@@ -1,7 +1,7 @@
-// A made-up large company for the CEO portal: about 290 people in 5
+// A made-up large company for the Executive portal: about 290 people in 5
 // branches and 8 departments, with 12 months of history.
 //
-// It exists so the CEO screens (charts, comparisons, drill-down) have
+// It exists so the Executive screens (charts, comparisons, drill-down) have
 // something realistic to show; the real HR data has 9 people. Everything is
 // generated from a fixed seed, so it is the same on every run and on every
 // platform. DEMO DATA: with a backend, these same shapes come from the

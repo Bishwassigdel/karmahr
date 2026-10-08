@@ -78,25 +78,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the login offers Employee, HR and CEO (Manager is postponed)', (
+  testWidgets('the login offers Employee, HR and Executive (Manager is postponed)', (
     tester,
   ) async {
     await pumpApp(tester, const LoginScreen());
 
     expect(find.text('Employee'), findsOneWidget);
     expect(find.text('HR'), findsOneWidget);
-    expect(find.text('CEO'), findsOneWidget);
+    expect(find.text('Executive'), findsOneWidget);
     expect(find.text('Manager'), findsNothing);
     expect(demoLoginRoles, [UserRole.employee, UserRole.hr, UserRole.owner]);
   });
 
-  testWidgets('CEO sign-in opens the CEO portal', (tester) async {
+  testWidgets('Executive sign-in opens the Executive portal', (tester) async {
     await pumpApp(tester, const LoginScreen());
-    await signInAs(tester, 'CEO');
+    await signInAs(tester, 'Executive');
 
     expect(auth(tester).role, UserRole.owner);
     expect(find.byType(OwnerPortalScreen), findsOneWidget);
-    expect(find.text('Signed in as CEO'), findsOneWidget);
+    expect(find.text('Signed in as Executive'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -173,7 +173,7 @@ void main() {
     await pumpApp(tester, const LoginScreen());
 
     expect(find.text('KarmaHR मा साइन इन गर्नुहोस्'), findsOneWidget);
-    expect(find.text('सीईओ'), findsOneWidget);
+    expect(find.text('कार्यकारी'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

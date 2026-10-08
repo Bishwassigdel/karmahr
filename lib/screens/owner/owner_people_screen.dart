@@ -39,8 +39,8 @@ class OwnerPeoplePage extends StatelessWidget {
   }
 }
 
-/// CEO > People: everyone in the (demo) company, searchable and filterable
-/// by department and branch. A long list, so it is built as you scroll.
+/// Executive > People: everyone in the (demo) company, searchable and
+/// filterable by department and branch. A long list, so it is built as you scroll.
 class OwnerPeopleScreen extends StatefulWidget {
   final String? initialDeptId;
   final String? initialBranchId;

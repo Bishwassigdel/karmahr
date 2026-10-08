@@ -13,6 +13,7 @@ import 'hr_payroll_screen.dart';
 import 'hr_reports_screen.dart';
 import 'hr_reviews_screen.dart';
 import 'hr_section.dart';
+import 'hr_teams_screen.dart';
 
 /// The body of one HR section. Shared by the wide layout (sidebar) and the
 /// phone layout (tab bar / More), so a section is built in exactly one
@@ -29,6 +30,7 @@ class HrSectionView extends StatelessWidget {
     return switch (section) {
       HrSection.overview => const HrOverviewScreen(),
       HrSection.employees => const HrEmployeesScreen(),
+      HrSection.teams => const HrTeamsScreen(),
       HrSection.leave => const HrLeaveScreen(),
       HrSection.payroll => const HrPayrollScreen(),
       HrSection.attendance => const HrAttendanceScreen(),

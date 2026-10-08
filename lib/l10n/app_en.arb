@@ -321,7 +321,7 @@
   "hrImportBadColumns": "needs 8 columns",
   "hrImportResult": "Import finished",
   "hrAuditEmployeesImported": "Employees imported",
-  "roleOwner": "CEO",
+  "roleOwner": "Executive",
   "ownerSecOverview": "Overview",
   "ownerSecDepartments": "Departments",
   "ownerSecPeople": "People",
@@ -661,5 +661,37 @@
   "testNotificationTitle": "Test notification",
   "testNotificationBody": "Push notifications are working. 🎉",
   "hrNewJoiners": "New joiners (last 30 days)",
-  "hrNoNewJoiners": "Nobody has joined in the last 30 days."
+  "hrNoNewJoiners": "Nobody has joined in the last 30 days.",
+  "hrSectionTeams": "Teams",
+  "hrNewTeam": "New team",
+  "hrTeamName": "Team name",
+  "hrTeamNameProblem": "Enter a team name that no other team uses.",
+  "hrTeamsEmpty": "No teams yet. Make one, add people, and choose who leads it.",
+  "hrTeamMemberCount": "{count, plural, =1{1 member} other{{count} members}}",
+  "@hrTeamMemberCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "hrNoHead": "No head yet",
+  "hrTeamHead": "Team head",
+  "hrRenameTeam": "Rename",
+  "hrAddMember": "Add a member",
+  "hrNoOneToAdd": "Everyone is already in this team.",
+  "hrMakeHead": "Make team head",
+  "hrRemoveHead": "Remove as head",
+  "hrRemoveFromTeam": "Remove from team",
+  "hrHeadElsewhere": "{name} already leads {team}. A person can lead only one team.",
+  "@hrHeadElsewhere": {
+    "placeholders": { "name": { "type": "String" }, "team": { "type": "String" } }
+  },
+  "hrDeleteTeam": "Delete team",
+  "hrDeleteTeamTitle": "Delete {name}?",
+  "@hrDeleteTeamTitle": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "hrDeleteTeamBody": "The team is removed. The people in it are not affected.",
+  "hrTeamHint": "Tap a person to make them head or remove them. The head can give tasks to the other members.",
+  "hrTeamNeedsHead": "This team has no head yet, so nobody can assign its members tasks.",
+  "hrAuditTeamCreated": "Team created",
+  "hrAuditTeamUpdated": "Team changed",
+  "hrAuditTeamDeleted": "Team deleted"
 }

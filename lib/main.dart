@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
+import 'config/env.dart';
 import 'data/company_demo.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_gate.dart';
@@ -32,6 +34,7 @@ import 'state/event_rsvp_state.dart';
 import 'state/expense_state.dart';
 import 'state/goals_state.dart';
 import 'state/notices_state.dart';
+import 'state/teams_state.dart';
 import 'state/onboarding_state.dart';
 import 'state/overtime_state.dart';
 import 'state/payroll_state.dart';
@@ -41,7 +44,16 @@ import 'state/survey_state.dart';
 import 'state/training_state.dart';
 import 'theme/app_colors.dart';
 
-void main() {
+Future<void> main() async {
+  // Connect to Supabase only when this build was given its keys (see
+  // config/env.dart). Without them the app runs on demo data.
+  if (Env.hasSupabase) {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      publishableKey: Env.supabasePublishableKey,
+    );
+  }
   runApp(const MyApp());
 }
 
@@ -51,7 +63,7 @@ void main() {
 /// provider, or the other way round.
 List<SingleChildWidget> appProviders() => [
   ChangeNotifierProvider(create: (context) => AuthState()),
-  // The CEO portal's demo company (about 290 people). Read-only.
+  // The Executive portal's demo company (about 290 people). Read-only.
   Provider<CompanyDemo>(create: (context) => CompanyDemo.generate()),
   ChangeNotifierProvider(create: (context) => LocaleState()),
   // Company data, not per-user: deliberately NOT reset on logout.
@@ -64,6 +76,7 @@ List<SingleChildWidget> appProviders() => [
   ChangeNotifierProvider(create: (context) => CompanyHolidaysState()),
   ChangeNotifierProvider(create: (context) => PayrollState()),
   ChangeNotifierProvider(create: (context) => NoticesState()),
+  ChangeNotifierProvider(create: (context) => TeamsState()),
   ChangeNotifierProvider(create: (context) => AuditLogState()),
   ChangeNotifierProvider(create: (context) => AppLockState()),
   ChangeNotifierProvider(create: (context) => AttendanceState()),
