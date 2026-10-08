@@ -3,11 +3,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:nepali_utils/nepali_utils.dart';
 
+import '../domain/nepal/bs_dates.dart';
+
 import '../domain/nepal/fiscal_year.dart';
 
 /// e.g. "Q1 · FY 2083/84" for today.
 String currentQuarterLabel([NepaliDateTime? on]) {
-  final date = on ?? NepaliDateTime.now();
+  final date = on ?? bsToday();
   final fy = NepaliFiscalYear.of(date);
   return 'Q${NepaliFiscalYear.quarterOf(date)} · FY ${fy.label}';
 }

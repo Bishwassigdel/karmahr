@@ -8,11 +8,11 @@ import '../state/notification_state.dart';
 import '../state/training_state.dart';
 
 import 'dashboard_screen.dart';
-import 'leave_screen.dart';
 import 'apps/attendance/attendance_module_screen.dart';
-import 'events_screen.dart';
-import 'apps_screen.dart';
 import 'manager/team_screen.dart';
+import 'more_screen.dart';
+import 'requests_screen.dart';
+import 'time_off_screen.dart';
 import '../theme/app_colors.dart';
 
 class MainNavScreen extends StatefulWidget {
@@ -46,7 +46,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
         title: 'Training overdue: ${course.title}',
         body:
             'It was due ${shortDate(course.dueDate)} and takes about '
-            '${course.durationMinutes} minutes. Find it in Apps → Training.',
+            '${course.durationMinutes} minutes. Find it in More → Apps → Training.',
       );
     }
   }
@@ -77,10 +77,10 @@ class _MainNavScreenState extends State<MainNavScreen> {
           ),
         ),
       (
-        const LeaveScreen(),
+        const TimeOffScreen(),
         BottomNavigationBarItem(
-          icon: const Icon(CupertinoIcons.calendar),
-          label: l10n.tabLeave,
+          icon: const Icon(CupertinoIcons.airplane),
+          label: l10n.tabTimeOff,
         ),
       ),
       (
@@ -91,17 +91,17 @@ class _MainNavScreenState extends State<MainNavScreen> {
         ),
       ),
       (
-        const EventsScreen(),
+        const RequestsScreen(),
         BottomNavigationBarItem(
-          icon: const Icon(CupertinoIcons.calendar_today),
-          label: l10n.tabEvents,
+          icon: const Icon(CupertinoIcons.tray_full),
+          label: l10n.tabRequests,
         ),
       ),
       (
-        const AppsScreen(),
+        const MoreScreen(),
         BottomNavigationBarItem(
-          icon: const Icon(CupertinoIcons.square_grid_2x2),
-          label: l10n.tabApps,
+          icon: const Icon(CupertinoIcons.ellipsis),
+          label: l10n.tabMore,
         ),
       ),
     ];

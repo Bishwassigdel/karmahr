@@ -141,14 +141,81 @@ KarmaHR is one app with three portals, chosen by the signed-in role
 
 | Role | Portal | Status |
 |---|---|---|
-| Employee | The employee app (Home, Leave, Time, Events, Apps) | Done |
+| Employee | The employee app: tabs **Home** (check-in, needs-you, "What's happening" feed), **Time Off** (balances, Request button, planner, holiday calendar, history), **Time**, **Requests** (every request type in one list), **More** (My Info, Apps, Settings, Log Out). **My Info** is one tabbed profile: Job · Contact · Pay · Docs · Emergency | Done |
 | Manager | The employee app **plus a Team tab** (managers still take leave and check in) | Team tab is a placeholder; approvals come next |
-| HR | The HR portal (`lib/screens/hr/`), planned with a wide web/tablet layout | Placeholder |
+| HR | The HR portal (`lib/screens/hr/`). Phone: tabs Home (titled KarmaHR, with the notification bell), Employees, Leave, Payroll, More (Notices, Reports, Settings, Log Out). Wide screens: a sidebar with all nine sections | All nine sections built on demo data (see "HR portal" below) |
+| CEO | The CEO portal (`lib/screens/owner/`). Phone: tabs **Overview**, **Departments**, **People**, **Money**, **More** (Activity, Settings, Log Out). Wide screens: the shared sidebar. Departments are scored on progress; the CEO can drill from company to department to branch to person | Built on a made-up 290-person company (demo data) |
 
 `portalHomeFor(role)` in `lib/screens/portal_home.dart` maps a role to its
 first screen. `confirmLogout()` in `lib/screens/logout.dart` is the one
 logout for every portal. The role picker on the login screen is **demo
 only**: once the backend exists, the role comes from the login response.
+
+### CEO portal
+
+Built for a big company: it shows **answers first** and the detail behind
+them, mostly read-only (HR has the tools to act).
+
+| Tab | What the CEO sees |
+|---|---|
+| Overview | Headcount against plan, progress score, attendance, payroll this month against last, people who left in the last year. Under it **Needs attention** (a department behind, high attrition, a department short of people, weak branch attendance, plus the HR portal's live items: requests waiting over 3 days, expiring documents, payroll not approved), then every department **lowest score first** |
+| Departments | A scorecard per department with a branch filter; tap for the score, its four parts, headcount over 12 months, the split by branch, attrition and joiners, and a way to the people |
+| People | Everyone, searchable, filtered by department and branch, built as you scroll; each person's tenure, attendance, goals, review, training and leave balance |
+| Money | Payroll this month (in lakh and crore), change on last month, average per employee, 12-month trend, split by department and by branch |
+| Activity | What is waiting on a decision (longest first) and the audit log |
+
+**Department progress score** = 35% goals on track + 25% reviews completed
++ 20% training completed + 20% attendance (each 0 to 100). 75 and above is on
+track, 60 to 74 needs watching, below 60 is behind. The app explains this
+on the Departments tab.
+
+**Privacy rules built in.** A group of fewer than 5 people is never broken
+down (it would identify someone). Pay is hidden on a person's page until the
+CEO asks; asking first confirms, and **every view of someone's pay is written
+to the audit log**.
+
+**The demo company.** `lib/data/company_demo.dart` makes about 290 people in
+5 branches and 8 departments, with 12 months of history, from a fixed seed
+(identical on every run and platform). It exists so the charts have
+something to show; the real HR data has 9 people. With a backend, the same
+shapes come from the server and the screens do not change. The HR items on
+Overview and Activity are the HR portal's real, live data.
+
+### HR portal
+
+Nine sections; the same screens serve a phone (bottom tabs; More holds
+Attendance, Reviews, Hiring, Notices and Reports) and a wide window
+(sidebar).
+
+| Section | What HR can do |
+|---|---|
+| Overview | See what needs action (requests to review, documents expiring, payroll not yet approved), headcount, upcoming birthdays and anniversaries, who's out |
+| Employees | Search and filter; a **list** or an **org chart**; open a record (Job, Contact, Pay, Docs, Tasks tabs); add, edit, deactivate; **import many from CSV**; make appointment, experience and salary-certificate **PDF letters**; keep each person's **documents** with expiry dates; tick **onboarding and offboarding** checklists |
+| Leave & Holidays | **Approvals** inbox for leave, expense, overtime and HR requests; read-only leave **Policy**; company **Holidays** next to the public holidays |
+| Payroll | Pick a BS month, run it with the Nepal tax and SSF rules, approve (freezes the figures), mark paid. Export the **register, bank transfer file, TDS report and SSF report** as CSV, and share each person's **payslip as a PDF** |
+| Attendance | Who came, was late, was absent or on leave, for any of the last 14 days; Saturday shows as the weekly holiday |
+| Reviews | Start a review cycle for everyone and move each person through self review, manager review and completed |
+| Hiring | Post jobs, add applicants, move them through the stages, and add a hired applicant as an employee with their details filled in |
+| Notices | Write, publish and delete company notices; employees see them at once |
+| Reports | Headcount by department and type, request counts, latest payroll, documents expiring soon, CSV exports, and the **audit log** (filter by kind, export) |
+
+**Company data vs your own data.** Employee records, documents, checklists,
+the approvals inbox, payroll, reviews, hiring, notices, company holidays and
+the audit log belong to the company, not to whoever is signed in, so logout
+does **not** reset them (your own leave, expenses and so on still reset).
+That is why an employee HR adds shows in the employee Directory, and a
+notice HR publishes shows in every employee's Notices, with no backend. The
+audit log records every HR change (who, what, when) and is never cleared.
+
+**Known limits (frontend only).** The approvals inbox holds demo requests
+from other people; a decision does not change an employee's own request
+list yet (that needs the shared backend table). Attendance is generated
+from each person's ID and the date, not recorded. Company holidays HR adds
+are not yet shown in the employee calendar, and leave policy is read-only.
+Review ratings and comments (the employee's and manager's part) are not
+built; HR only tracks the steps. PDF letters are unsigned drafts, and the
+employer SSF share (20%), tax, SSF and leave numbers are unverified
+placeholders (see "Nepal domain layer").
 
 ### Translations (English ⇄ नेपाली)
 
@@ -194,10 +261,12 @@ then show English.
   `$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)` setting.
 - **Android:** `minSdk` is 24 (local_auth), and core library desugaring is
   enabled (required by flutter_local_notifications).
-- **Timezone:** BS ⇄ AD conversion (`nepali_utils`) assumes the device is
-  on Nepal time (+5:45), which is true for real users. Tests pass in Nepal
-  time and UTC; in timezones behind UTC (e.g. the US) some dates come out a
-  day off. Fix before supporting users outside Nepal.
+- **Timezone:** never call `toNepaliDateTime()`, `NepaliDateTime.now()`
+  or `.add()` on a BS date directly. Those nepali_utils calls go wrong
+  outside Nepal time (daylight saving makes them land a day off). Use
+  `bsFromAd()`, `bsToday()` and `bsAddDays()` from
+  `lib/domain/nepal/bs_dates.dart`. CI runs the date tests in New York time
+  to catch this.
 
 ## Testing
 
@@ -205,7 +274,7 @@ then show English.
 flutter test
 ```
 
-304 tests:
+782 tests:
 
 - **Unit** — Nepal rules (fiscal year, leave policy, tax + caps, leave
   planner, bonus, overtime), PDFs, state classes.
@@ -239,11 +308,17 @@ lib/
 ├── data/                              # demo data (replaced by backend later)
 │   ├── calendar_data.dart             # BS calendar markers, holidays
 │   ├── current_employee.dart          # employee details + salary, one place
+│   ├── attendance_demo.dart           # demo attendance, from ID + date
+│   ├── company_demo.dart              # the 290-person demo company (CEO portal)
 │   ├── employee_directory_data.dart
 │   ├── notices_data.dart
 │   └── team_data.dart                 # team leave, celebrations, events
 ├── domain/
+│   ├── employee_validation.dart       # shared rules for the form + CSV import
+│   ├── org_chart.dart                 # manager names -> reporting tree
+│   ├── owner_insights.dart            # what needs attention, lakh/crore, privacy rule
 │   ├── nepal/                         # pure-Dart Nepal HR rules
+│   │   ├── bs_dates.dart              # timezone-safe AD <-> BS helpers
 │   │   ├── festival_bonus.dart
 │   │   ├── fiscal_year.dart
 │   │   ├── leave_planner.dart
@@ -265,17 +340,50 @@ lib/
 │   ├── kudos_state.dart, feedback_state.dart, survey_state.dart
 │   ├── goals_state.dart, training_state.dart, onboarding_state.dart
 │   ├── document_wallet_state.dart, emergency_info_state.dart
-│   └── safety_state.dart, event_rsvp_state.dart
+│   ├── safety_state.dart, event_rsvp_state.dart
+│   └── (company data, never reset on logout) employee_records_state,
+│       employee_documents_state, checklist_state, hr_inbox_state,
+│       payroll_state, reviews_state, hiring_state, notices_state,
+│       company_holidays_state, audit_log_state
 ├── theme/
 │   └── app_colors.dart
 └── screens/
     ├── welcome_screen.dart, login_screen.dart   # + demo role picker
     ├── portal_home.dart, logout.dart  # role → portal; shared logout
     ├── manager/team_screen.dart       # Manager portal (Team tab)
-    ├── hr/hr_portal_screen.dart       # HR portal
+    ├── more_screen.dart               # employee More tab (My Info, apps, settings)
+    ├── time_off_screen.dart           # Time Off hub
+    ├── requests_screen.dart           # Requests hub (leave, expense, overtime, HR)
+    ├── profile_screen.dart            # My Info (tabbed)
+    ├── owner/                         # CEO portal
+    │   ├── owner_portal_screen.dart   # wide: sidebar; phone: OwnerPhoneShell
+    │   ├── owner_phone_shell.dart     # phone tabs + More
+    │   ├── owner_overview / departments / department / people / person
+    │   │   / money / activity _screen.dart
+    │   └── owner_widgets.dart         # progress colours, percent bar, trend chart
+    ├── hr/                            # HR portal
+    │   ├── hr_portal_screen.dart      # wide: sidebar; phone: HrPhoneShell
+    │   ├── hr_phone_shell.dart        # phone tab bar + HrSectionPage
+    │   ├── hr_more_screen.dart        # HR More tab
+    │   ├── hr_section.dart            # the nine sections (enum)
+    │   ├── hr_section_view.dart       # each section's body, one place
+    │   ├── hr_nav_scope.dart          # lets Home open another section
+    │   ├── hr_overview_screen.dart    # needs-your-action, headcount, events
+    │   ├── hr_employees_screen.dart   # list, search, filter
+    │   ├── hr_employee_detail_screen.dart / hr_employee_form_screen.dart
+    │   ├── hr_leave_screen.dart       # Approvals · Policy · Holidays tabs
+    │   ├── hr_approvals_view.dart / hr_policy_view.dart / hr_holidays_view.dart
+    │   ├── hr_payroll_screen.dart     # run, approve, mark paid, CSV
+    │   ├── hr_notices_screen.dart / hr_notice_form_screen.dart
+    │   ├── hr_reports_screen.dart     # headcount, requests, payroll, audit
+    │   ├── hr_bar_row.dart            # shared bar-chart row
+    │   ├── hr_document_sheet.dart     # add a document (+ type labels)
+    │   ├── hr_attendance_screen.dart  # company-wide daily attendance
+    │   ├── hr_reviews_screen.dart / hr_review_cycle_screen.dart
+    │   └── hr_hiring_screen.dart / hr_job_screen.dart
     ├── app_lock_gate.dart, app_lock_screen.dart
-    ├── main_nav_screen.dart           # bottom tab bar hub
-    ├── dashboard_screen.dart, apps_screen.dart, insights_screen.dart
+    ├── main_nav_screen.dart           # employee bottom tab bar
+    ├── dashboard_screen.dart, apps_screen.dart (opened from More), insights_screen.dart
     ├── notifications_screen.dart, global_search_screen.dart
     ├── leave_screen.dart, leave_balances_screen.dart, leave_planner_screen.dart
     ├── request_screen.dart, my_requests_screen.dart
@@ -287,13 +395,13 @@ lib/
     ├── anonymous_feedback_screen.dart, pulse_survey_screen.dart
     ├── goals_screen.dart, training_screen.dart, onboarding_screen.dart
     ├── document_wallet_screen.dart, emergency_info_screen.dart
-    ├── safety_checkin_screen.dart
-    ├── profile_screen.dart, settings_screen.dart
+    ├── safety_checkin_screen.dart, settings_screen.dart
     └── apps/
         ├── attendance/, tasks/
         └── widgets/                   # ui_kit (TileInfo, FormRow, pickers,
                                        # dialogs), skeleton, refreshable list,
-                                       # PDF actions, badges, cards
+                                       # PDF actions, badges, cards,
+                                       # karma_logo, portal_sidebar (shared)
 test/
 ├── domain/                            # Nepal rules unit tests
 ├── state/                             # state class tests
@@ -303,18 +411,21 @@ test/
 
 ## Roadmap / what's next
 
-1. **Manager portal** — approve/reject leave, expenses, overtime and HR
-   requests; team attendance; team leave calendar; team goals.
-2. **HR/Admin portal** (web/tablet layout) — employee records, leave and
-   holiday policy setup, payroll runs, notices/events publishing, reports.
-3. Translate the remaining employee screens to Nepali.
-4. Optional/floating holidays and multi-day Dashain/Tihar in the holiday
-   calendar, so bridge suggestions have more to work with.
-5. AI features — receipt OCR, voice-filled forms, an HR assistant.
+Done: the employee portal and all nine HR sections (frontend, demo data).
+The Manager role is **postponed**: HR approves everything for now.
 
-Then: **backend integration** — real login (the role comes from the
-server), replacing the demo `fetch*` functions, `simulatedRefresh()`, the
-calendar-based working-days estimate, and the hardcoded current employee.
+1. **Design polish pass** — one card style, one heading style, consistent
+   spacing across all screens.
+2. Translate the older employee screens to Nepali.
+3. Have a Nepali HR professional and a CA verify the placeholder leave,
+   tax, SSF, overtime and bonus rules (`NOTE(hr-review)` /
+   `NOTE(finance-review)`), then make tax slabs and holidays HR-editable.
+4. **Backend** (Supabase recommended): real login with the role from the
+   server, the shared tables behind the company data above, file storage,
+   push notifications, and server-side payroll.
+5. AI features — HR assistant, receipt scanning, smart request filling.
+6. Optional/floating holidays and multi-day Dashain/Tihar in the holiday
+   calendar.
 
 ## Getting started
 

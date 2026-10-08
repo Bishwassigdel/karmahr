@@ -12,6 +12,7 @@ import 'package:my_first_flutter_app/main.dart';
 import 'package:my_first_flutter_app/screens/app_lock_gate.dart';
 import 'package:my_first_flutter_app/screens/hr/hr_portal_screen.dart';
 import 'package:my_first_flutter_app/screens/login_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_portal_screen.dart';
 import 'package:my_first_flutter_app/screens/main_nav_screen.dart';
 import 'package:my_first_flutter_app/screens/settings_screen.dart';
 import 'package:my_first_flutter_app/state/auth_state.dart';
@@ -77,15 +78,49 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Manager sign-in adds a Team tab', (tester) async {
+  testWidgets('the login offers Employee, HR and CEO (Manager is postponed)', (
+    tester,
+  ) async {
     await pumpApp(tester, const LoginScreen());
-    await signInAs(tester, 'Manager');
 
-    expect(auth(tester).role, UserRole.manager);
-    await tester.tap(find.text('Team'));
-    await settle(tester);
-    expect(find.text('Manager tools are on the way'), findsOneWidget);
+    expect(find.text('Employee'), findsOneWidget);
+    expect(find.text('HR'), findsOneWidget);
+    expect(find.text('CEO'), findsOneWidget);
+    expect(find.text('Manager'), findsNothing);
+    expect(demoLoginRoles, [UserRole.employee, UserRole.hr, UserRole.owner]);
+  });
+
+  testWidgets('CEO sign-in opens the CEO portal', (tester) async {
+    await pumpApp(tester, const LoginScreen());
+    await signInAs(tester, 'CEO');
+
+    expect(auth(tester).role, UserRole.owner);
+    expect(find.byType(OwnerPortalScreen), findsOneWidget);
+    expect(find.text('Signed in as CEO'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a manager role still gets the Team tab, if one is set', (
+    tester,
+  ) async {
+    // Not offered at login, but the app still knows how to show it.
+    tester.view.physicalSize = const Size(393, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ...appProviders(),
+          // Innermost, so it wins over the app's own AuthState.
+          ChangeNotifierProvider<AuthState>.value(
+            value: AuthState()..signIn(UserRole.manager),
+          ),
+        ],
+        child: const CupertinoApp(home: MainNavScreen()),
+      ),
+    );
+    await settle(tester);
+    expect(find.text('Team'), findsOneWidget);
   });
 
   testWidgets('HR sign-in opens the HR portal, and logout signs out', (
@@ -97,9 +132,12 @@ void main() {
     expect(find.byType(HrPortalScreen), findsOneWidget);
     expect(find.text('Signed in as HR'), findsOneWidget);
 
+    // On a phone, Log Out is under the More tab.
+    await tester.tap(find.text('More'));
+    await settle(tester);
     await tester.tap(find.text('Log Out'));
     await settle(tester);
-    // The dialog's destructive button (the nav bar button is behind it).
+    // Then confirm in the dialog (the More row is behind it).
     await tester.tap(find.text('Log Out').last);
     await settle(tester);
 
@@ -135,7 +173,7 @@ void main() {
     await pumpApp(tester, const LoginScreen());
 
     expect(find.text('KarmaHR मा साइन इन गर्नुहोस्'), findsOneWidget);
-    expect(find.text('प्रबन्धक'), findsOneWidget);
+    expect(find.text('सीईओ'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 
+import '../l10n/l10n.dart';
 import 'apps/attendance/attendance_module_screen.dart';
 import 'apps/tasks/tasks_module_screen.dart';
 import 'apps/widgets/app_module_card.dart';
@@ -7,6 +8,7 @@ import 'anonymous_feedback_screen.dart';
 import 'document_wallet_screen.dart';
 import 'emergency_info_screen.dart';
 import 'employee_directory_screen.dart';
+import 'events_screen.dart';
 import 'expense_claims_screen.dart';
 import 'global_search_screen.dart';
 import 'goals_screen.dart';
@@ -14,7 +16,6 @@ import 'insights_screen.dart';
 import 'kudos_screen.dart';
 import 'leave_balances_screen.dart';
 import 'leave_planner_screen.dart';
-import 'my_requests_screen.dart';
 import 'onboarding_screen.dart';
 import 'payslip_screen.dart';
 import 'pulse_survey_screen.dart';
@@ -117,11 +118,11 @@ final _sections = <(String, List<_Module>)>[
         (_) => const HrRequestScreen(),
       ),
       _Module(
-        CupertinoIcons.tray_full,
-        'My Requests',
-        'Everything you submitted',
+        CupertinoIcons.calendar_today,
+        'Events',
+        'Company events & celebrations',
         CupertinoColors.systemPurple,
-        (_) => const MyRequestsScreen(),
+        (_) => const EventsScreen(),
       ),
     ],
   ),
@@ -235,7 +236,7 @@ class AppsScreen extends StatelessWidget {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: const Text('Apps'),
+        middle: Text(context.l10n.moreApps),
         // Apps is the hub every module is reachable from, which makes
         // it the natural home for cross-module search too.
         trailing: CupertinoButton(
@@ -246,7 +247,7 @@ class AppsScreen extends StatelessWidget {
               builder: (context) => const GlobalSearchScreen(),
             ),
           ),
-          child: const Icon(CupertinoIcons.search),
+          child: Icon(CupertinoIcons.search, semanticLabel: context.l10n.a11ySearch),
         ),
       ),
       child: SafeArea(

@@ -3,6 +3,8 @@
 // that estimates the pay as you type.
 
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../data/calendar_data.dart';
@@ -316,7 +318,7 @@ class _OvertimeRequestScreenState extends State<OvertimeRequestScreen> {
                         onPressed: _hours <= 0.5
                             ? null
                             : () => setState(() => _hours -= 0.5),
-                        child: const Icon(CupertinoIcons.minus_circle),
+                        child: Icon(CupertinoIcons.minus_circle, semanticLabel: context.l10n.a11yFewerHours),
                       ),
                       CupertinoButton(
                         padding: EdgeInsets.zero,
@@ -324,7 +326,7 @@ class _OvertimeRequestScreenState extends State<OvertimeRequestScreen> {
                         onPressed: _hours >= 8
                             ? null
                             : () => setState(() => _hours += 0.5),
-                        child: const Icon(CupertinoIcons.plus_circle),
+                        child: Icon(CupertinoIcons.plus_circle, semanticLabel: context.l10n.a11yMoreHours),
                       ),
                     ],
                   ),

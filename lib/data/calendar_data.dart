@@ -10,6 +10,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:nepali_utils/nepali_utils.dart';
+import '../domain/nepal/bs_dates.dart';
 
 /// The five kinds of day a company/HR calendar needs to show.
 enum MarkerType {
@@ -194,7 +195,7 @@ List<UpcomingMarker> getUpcomingMarkers({
   int limit = 5,
   Set<MarkerType>? typesFilter,
 }) {
-  final today = NepaliDateTime.now();
+  final today = bsToday();
   final todayOnly = NepaliDateTime(today.year, today.month, today.day);
 
   final results = <UpcomingMarker>[];
@@ -226,7 +227,7 @@ List<UpcomingMarker> getUpcomingMarkers({
 /// real holidays as free — "Present" or "My Leave" markers don't make a
 /// day free.
 String? holidayNameOn(DateTime adDate) {
-  final bs = adDate.toNepaliDateTime();
+  final bs = bsFromAd(adDate);
   final marker = demoMarkers[markerKey(bs.year, bs.month, bs.day)];
   if (marker == null) return null;
   final isHoliday =

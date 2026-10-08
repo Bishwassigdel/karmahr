@@ -59,8 +59,8 @@ class LeavePolicy {
   bool get isAccrualBased => accrualPerWorkedDays != null;
 }
 
-/// NOTE(hr-review): verify every number below against Labour Act 2074
-/// and the company bylaw before relying on this for real decisions.
+
+
 const Map<String, LeavePolicy> leavePolicies = {
   'Home Leave': LeavePolicy(
     type: 'Home Leave',

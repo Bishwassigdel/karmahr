@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data/employee_directory_data.dart';
+import '../state/employee_records_state.dart';
 import '../theme/app_colors.dart';
 
 /// Searchable list of coworkers. StatefulWidget because the search
@@ -27,7 +29,7 @@ class _EmployeeDirectoryScreenState extends State<EmployeeDirectoryScreen> {
     // With only ~8 demo employees this is trivially fast — a real
     // backend-backed version with thousands of employees would
     // instead ask the server to filter, not the phone.
-    final filtered = demoEmployees.where((employee) {
+    final filtered = context.watch<EmployeeRecordsState>().directory.where((employee) {
       if (_query.isEmpty) return true;
 
       // toLowerCase() on both sides makes the search

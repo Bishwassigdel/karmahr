@@ -2,6 +2,8 @@
 // method (eSewa / Khalti / bank).
 
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../data/current_employee.dart';
@@ -34,7 +36,7 @@ class ExpenseClaimsScreen extends StatelessWidget {
             context,
             CupertinoPageRoute(builder: (_) => const NewExpenseClaimScreen()),
           ),
-          child: const Icon(CupertinoIcons.add),
+          child: Icon(CupertinoIcons.add, semanticLabel: context.l10n.a11yNewExpenseClaim),
         ),
       ),
       child: SafeArea(

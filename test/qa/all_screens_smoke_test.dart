@@ -34,7 +34,20 @@ import 'package:my_first_flutter_app/screens/give_kudos_screen.dart';
 import 'package:my_first_flutter_app/screens/global_search_screen.dart';
 import 'package:my_first_flutter_app/screens/goals_screen.dart';
 import 'package:my_first_flutter_app/screens/holiday_calendar_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_attendance_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employee_detail_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employee_form_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_employees_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_hiring_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_job_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_leave_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_notice_form_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_notices_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_payroll_screen.dart';
 import 'package:my_first_flutter_app/screens/hr/hr_portal_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_reports_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_review_cycle_screen.dart';
+import 'package:my_first_flutter_app/screens/hr/hr_reviews_screen.dart';
 import 'package:my_first_flutter_app/screens/insights_screen.dart';
 import 'package:my_first_flutter_app/screens/kudos_preview_screen.dart';
 import 'package:my_first_flutter_app/screens/kudos_screen.dart';
@@ -43,7 +56,16 @@ import 'package:my_first_flutter_app/screens/leave_planner_screen.dart';
 import 'package:my_first_flutter_app/screens/leave_screen.dart';
 import 'package:my_first_flutter_app/screens/login_screen.dart';
 import 'package:my_first_flutter_app/screens/main_nav_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_activity_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_department_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_departments_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_money_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_overview_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_people_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_person_screen.dart';
+import 'package:my_first_flutter_app/screens/owner/owner_portal_screen.dart';
 import 'package:my_first_flutter_app/screens/manager/team_screen.dart';
+import 'package:my_first_flutter_app/screens/more_screen.dart';
 import 'package:my_first_flutter_app/screens/my_requests_screen.dart';
 import 'package:my_first_flutter_app/screens/notices_screen.dart';
 import 'package:my_first_flutter_app/screens/notifications_screen.dart';
@@ -52,6 +74,8 @@ import 'package:my_first_flutter_app/screens/payslip_screen.dart';
 import 'package:my_first_flutter_app/screens/profile_screen.dart';
 import 'package:my_first_flutter_app/screens/pulse_survey_screen.dart';
 import 'package:my_first_flutter_app/screens/request_screen.dart';
+import 'package:my_first_flutter_app/screens/requests_screen.dart';
+import 'package:my_first_flutter_app/screens/time_off_screen.dart';
 import 'package:my_first_flutter_app/screens/safety_checkin_screen.dart';
 import 'package:my_first_flutter_app/screens/settings_screen.dart';
 import 'package:my_first_flutter_app/screens/shifts_overtime_screen.dart';
@@ -69,6 +93,9 @@ final Map<String, Widget Function()> screens = {
   'MainNav (Dashboard tab)': () => const MainNavScreen(),
   'Dashboard': () => const DashboardScreen(),
   'Apps': () => const AppsScreen(),
+  'More': () => const MoreScreen(),
+  'Time Off': () => const TimeOffScreen(),
+  'Requests': () => const RequestsScreen(),
   'Leave': () => const LeaveScreen(),
   'Leave (pre-filled)': () => LeaveScreen(
     initialStartDate: DateTime(2026, 10, 8),
@@ -117,6 +144,28 @@ final Map<String, Widget Function()> screens = {
   'Safety Check-in': () => const SafetyCheckInScreen(),
   'Manager Team': () => const TeamScreen(),
   'HR Portal': () => const HrPortalScreen(),
+  'HR Employees': () => const HrEmployeesScreen(),
+  'HR Employee detail': () =>
+      const HrEmployeeDetailScreen(employeeId: 'MB-24071'),
+  'HR New employee': () => const HrEmployeeFormScreen(),
+  'HR Leave & Holidays': () => const HrLeaveScreen(),
+  'HR Payroll': () => const HrPayrollScreen(),
+  'HR Notices': () => const HrNoticesScreen(),
+  'HR Reports': () => const HrReportsScreen(),
+  'HR Attendance': () => const HrAttendanceScreen(),
+  'HR Reviews': () => const HrReviewsScreen(),
+  'HR Review cycle': () => const HrReviewCycleScreen(cycleId: 'c2'),
+  'HR Hiring': () => const HrHiringScreen(),
+  'HR Job': () => const HrJobScreen(jobId: 'j1'),
+  'CEO Portal': () => const OwnerPortalScreen(),
+  'CEO Overview': () => const OwnerOverviewScreen(),
+  'CEO Departments': () => const OwnerDepartmentsScreen(),
+  'CEO Department': () => const OwnerDepartmentScreen(deptId: 'd-support'),
+  'CEO People': () => const OwnerPeoplePage(),
+  'CEO Person': () => const OwnerPersonScreen(personId: 'E1001'),
+  'CEO Money': () => const OwnerMoneyScreen(),
+  'CEO Activity': () => const OwnerActivityScreen(),
+  'HR New notice': () => const HrNoticeFormScreen(),
 };
 
 class Condition {
@@ -201,7 +250,9 @@ void main() {
 
       // States that only appear after an action — the safety alert and a
       // completed pulse check-in change the Dashboard's layout.
-      testWidgets('Dashboard during a safety drill, pulse answered', (tester) async {
+      testWidgets('Dashboard during a safety drill, pulse answered', (
+        tester,
+      ) async {
         await pumpScreen(
           tester,
           const DashboardScreen(),

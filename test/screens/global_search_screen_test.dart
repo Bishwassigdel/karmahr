@@ -2,16 +2,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+import 'package:my_first_flutter_app/main.dart';
 import 'package:my_first_flutter_app/screens/global_search_screen.dart';
-import 'package:my_first_flutter_app/state/hr_request_state.dart';
-import 'package:my_first_flutter_app/state/leave_state.dart';
 
 Widget _wrapped() {
   return MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => LeaveState()),
-      ChangeNotifierProvider(create: (_) => HrRequestState()),
-    ],
+    providers: appProviders(),
     child: const CupertinoApp(home: GlobalSearchScreen()),
   );
 }

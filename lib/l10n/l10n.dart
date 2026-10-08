@@ -20,5 +20,6 @@ extension UserRoleLabel on UserRole {
     UserRole.employee => l10n.roleEmployee,
     UserRole.manager => l10n.roleManager,
     UserRole.hr => l10n.roleHr,
+    UserRole.owner => l10n.roleOwner,
   };
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:nepali_utils/nepali_utils.dart';
 
+import 'package:my_first_flutter_app/domain/nepal/bs_dates.dart';
 import 'package:my_first_flutter_app/domain/nepal/fiscal_year.dart';
 
 void main() {
@@ -20,10 +21,13 @@ void main() {
       expect(fy.startYear, 2083);
     });
 
-    test('a date in Ashad (month 3) still belongs to the previous startYear', () {
-      final fy = NepaliFiscalYear.of(NepaliDateTime(2084, 3, 1));
-      expect(fy.startYear, 2083);
-    });
+    test(
+      'a date in Ashad (month 3) still belongs to the previous startYear',
+      () {
+        final fy = NepaliFiscalYear.of(NepaliDateTime(2084, 3, 1));
+        expect(fy.startYear, 2083);
+      },
+    );
   });
 
   group('NepaliFiscalYear boundaries', () {
@@ -74,7 +78,7 @@ void main() {
     });
 
     test('a day just after the fiscal year ends is excluded', () {
-      final dayAfter = fy.end.add(const Duration(days: 1));
+      final dayAfter = bsAddDays(fy.end, 1);
       expect(fy.contains(dayAfter), isFalse);
     });
 
@@ -119,10 +123,7 @@ void main() {
     });
 
     test('different startYears are not equal', () {
-      expect(
-        const NepaliFiscalYear(2083),
-        isNot(const NepaliFiscalYear(2084)),
-      );
+      expect(const NepaliFiscalYear(2083), isNot(const NepaliFiscalYear(2084)));
     });
   });
 }

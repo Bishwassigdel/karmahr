@@ -31,3 +31,10 @@ jobs:
 
       - name: Run tests
         run: flutter test
+
+      # Dates must not shift with the device timezone (the HR portal can be
+      # opened from anywhere). New York is behind UTC and has daylight saving.
+      - name: Date rules in another timezone
+        run: flutter test test/domain test/state test/data
+        env:
+          TZ: America/New_York

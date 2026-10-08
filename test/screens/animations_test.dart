@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:my_first_flutter_app/screens/apps/widgets/staggered_entrance.dart';
+import 'package:my_first_flutter_app/main.dart';
 import 'package:my_first_flutter_app/screens/notices_screen.dart';
 
 double _opacityOf(WidgetTester tester) => tester
@@ -48,7 +50,12 @@ void main() {
   testWidgets('opening a notice flies its category pill into the detail', (
     tester,
   ) async {
-    await tester.pumpWidget(const CupertinoApp(home: NoticesScreen()));
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: appProviders(),
+        child: const CupertinoApp(home: NoticesScreen()),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // One Hero per visible notice card, each with a distinct tag —

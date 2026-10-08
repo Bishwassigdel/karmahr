@@ -2,6 +2,8 @@
 // received shown alongside — both are what you bring to an appraisal.
 
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:provider/provider.dart';
 
 import '../data/current_employee.dart';
@@ -30,7 +32,7 @@ class GoalsScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           minimumSize: Size.zero,
           onPressed: () => _addGoal(context),
-          child: const Icon(CupertinoIcons.add),
+          child: Icon(CupertinoIcons.add, semanticLabel: context.l10n.a11yAddGoal),
         ),
       ),
       child: SafeArea(

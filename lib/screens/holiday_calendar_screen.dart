@@ -1,6 +1,9 @@
 // 1. IMPORTS
 import 'package:flutter/cupertino.dart';
+
+import '../l10n/l10n.dart';
 import 'package:nepali_utils/nepali_utils.dart';
+import '../domain/nepal/bs_dates.dart';
 
 import '../theme/app_colors.dart';
 import '../data/calendar_data.dart';
@@ -27,7 +30,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    final today = NepaliDateTime.now();
+    final today = bsToday();
     _displayedMonth = NepaliDateTime(today.year, today.month, 1);
     _selectedDay = today.day;
   }
@@ -108,7 +111,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: _goToPreviousMonth,
-            child: const Icon(CupertinoIcons.chevron_left, size: 22),
+            child: Icon(CupertinoIcons.chevron_left, semanticLabel: context.l10n.a11yPreviousMonth, size: 22),
           ),
 
           Expanded(
@@ -136,7 +139,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
           CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: _goToNextMonth,
-            child: const Icon(CupertinoIcons.chevron_right, size: 22),
+            child: Icon(CupertinoIcons.chevron_right, semanticLabel: context.l10n.a11yNextMonth, size: 22),
           ),
         ],
       ),
@@ -565,7 +568,7 @@ class _HolidayCalendarScreenState extends State<HolidayCalendarScreen> {
             ),
 
             Icon(
-              CupertinoIcons.chevron_right,
+              CupertinoIcons.chevron_right, semanticLabel: context.l10n.a11yNextMonth,
               size: 18,
               color: color.withValues(alpha: 0.5),
             ),

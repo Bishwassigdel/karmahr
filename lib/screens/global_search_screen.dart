@@ -12,10 +12,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
-import '../data/employee_directory_data.dart';
-import '../data/notices_data.dart';
+import '../state/employee_records_state.dart';
 import '../state/hr_request_state.dart';
 import '../state/leave_state.dart';
+import '../state/notices_state.dart';
 import '../theme/app_colors.dart';
 import 'employee_directory_screen.dart';
 import 'my_requests_screen.dart';
@@ -139,7 +139,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
     final noticeColor = CupertinoColors.systemIndigo.resolveFrom(context);
     final hrColor = CupertinoColors.systemOrange.resolveFrom(context);
 
-    for (final employee in demoEmployees) {
+    for (final employee in context.read<EmployeeRecordsState>().directory) {
       final matches =
           employee.name.toLowerCase().contains(q) ||
           employee.department.toLowerCase().contains(q) ||
@@ -162,7 +162,7 @@ class _GlobalSearchScreenState extends State<GlobalSearchScreen> {
       );
     }
 
-    for (final notice in demoNotices) {
+    for (final notice in context.read<NoticesState>().notices) {
       final matches =
           notice.title.toLowerCase().contains(q) ||
           notice.body.toLowerCase().contains(q) ||

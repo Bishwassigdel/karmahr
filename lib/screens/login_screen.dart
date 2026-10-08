@@ -285,6 +285,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     _obscurePassword
                         ? CupertinoIcons.eye
                         : CupertinoIcons.eye_slash,
+                    semanticLabel: _obscurePassword
+                        ? l10n.a11yShowPassword
+                        : l10n.a11yHidePassword,
 
                     size: 19,
 
@@ -347,7 +350,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     if (role != null) setState(() => _demoRole = role);
                   },
                   children: {
-                    for (final role in UserRole.values)
+                    for (final role in demoLoginRoles)
                       role: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         child: Text(

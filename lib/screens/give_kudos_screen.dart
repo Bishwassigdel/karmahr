@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 import '../data/employee_directory_data.dart';
+import '../state/employee_records_state.dart';
 import '../state/kudos_state.dart';
 import '../theme/app_colors.dart';
 import 'kudos_preview_screen.dart';
@@ -24,6 +26,10 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
   String? _selectedCategory;
   int _selectedPoints = 0;
 
+  // Active employees from the HR-managed records.
+  List<Employee> get _employees =>
+      context.read<EmployeeRecordsState>().directory;
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -31,11 +37,11 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
   }
 
   // Scrolling picker over every coworker in the Employee Directory —
-  // reuses demoEmployees instead of a separate hardcoded name list.
+  // reuses _employees instead of a separate hardcoded name list.
   void _selectRecipient() {
     int selectedIndex = _selectedRecipient == null
         ? 0
-        : demoEmployees.indexOf(_selectedRecipient!);
+        : _employees.indexOf(_selectedRecipient!);
 
     showCupertinoModalPopup(
       context: context,
@@ -56,7 +62,7 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     onPressed: () {
                       setState(() {
-                        _selectedRecipient = demoEmployees[pendingIndex];
+                        _selectedRecipient = _employees[pendingIndex];
                       });
                       Navigator.pop(context);
                     },
@@ -71,7 +77,7 @@ class _GiveKudosScreenState extends State<GiveKudosScreen> {
                     initialItem: selectedIndex,
                   ),
                   onSelectedItemChanged: (index) => pendingIndex = index,
-                  children: demoEmployees.map((employee) {
+                  children: _employees.map((employee) {
                     return Center(child: Text(employee.name));
                   }).toList(),
                 ),

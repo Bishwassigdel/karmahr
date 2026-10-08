@@ -13,16 +13,19 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:nepali_utils/nepali_utils.dart';
+
+import '../domain/nepal/bs_dates.dart';
+
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
-import 'logout.dart';
-import 'apps/attendance/attendance_module_screen.dart';
 import 'apps/tasks/task_models.dart';
 import 'apps/tasks/tasks_module_screen.dart';
+import 'apps/widgets/karma_logo.dart';
 import 'apps/widgets/progress_bar.dart';
 import 'apps/widgets/status_badge.dart';
 import 'apps/widgets/ui_kit.dart';
+import 'events_screen.dart';
 import 'expense_claims_screen.dart';
 import 'leave_balances_screen.dart';
 import 'leave_planner_screen.dart';
@@ -31,11 +34,8 @@ import 'my_requests_screen.dart';
 import 'notifications_screen.dart';
 import 'onboarding_screen.dart';
 import 'payslip_screen.dart';
-import 'profile_screen.dart';
 import 'pulse_survey_screen.dart';
 import 'safety_checkin_screen.dart';
-import 'settings_screen.dart';
-import 'team_availability_screen.dart';
 import 'training_screen.dart';
 import '../data/calendar_data.dart';
 import '../data/current_employee.dart';
@@ -66,53 +66,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Provider change — making Important Tasks vanish and reappear.
   late final Future<List<TaskItem>> _tasks = fetchMyTasks();
 
-  // ============================================================
-  // MENU (Cupertino has no drawer widget)
-  // ============================================================
-  void _showMenu(BuildContext context) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (sheetContext) => CupertinoActionSheet(
-        title: Text(currentEmployee.name),
-        message: Text('Staff ID: ${currentEmployee.employeeId}'),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(sheetContext);
-              Navigator.push(
-                context,
-                CupertinoPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-            child: const Text('Profile'),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(sheetContext);
-              Navigator.push(
-                context,
-                CupertinoPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
-            child: Text(context.l10n.settingsTitle),
-          ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(sheetContext);
-              confirmLogout(context);
-            },
-            child: Text(context.l10n.logOut),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(sheetContext),
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-  }
-
   void _open(Widget screen) {
     Navigator.push(context, CupertinoPageRoute(builder: (_) => screen));
   }
@@ -124,13 +77,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
+        leading: const KarmaLogo(),
         middle: const Text('KarmaHR'),
-        leading: CupertinoButton(
-          padding: EdgeInsets.zero,
-          minimumSize: Size.zero,
-          onPressed: () => _showMenu(context),
-          child: const Icon(CupertinoIcons.line_horizontal_3),
-        ),
         trailing: const NotificationBell(),
       ),
       child: SafeArea(
@@ -173,16 +121,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 22),
-            const WhosOutStrip(),
             if (!pulseDone) ...[
               const SizedBox(height: 12),
               const PulseCheckInCard(),
             ],
             _AttentionCard(open: _open),
             const _DashainCard(),
+            const _HappeningFeed(),
             _ImportantTasks(tasks: _tasks),
-            const _TodayCard(),
           ],
         ),
       ),
@@ -231,7 +177,7 @@ class _Greeting extends StatelessWidget {
     final bs = NepaliDateFormat(
       'MMMM d, y',
       Language.english,
-    ).format(NepaliDateTime.now());
+    ).format(bsToday());
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,106 +732,164 @@ class _TaskCard extends StatelessWidget {
 }
 
 // ============================================================
-// TODAY — real holidays, company events, and celebrations
-// (replaces a hardcoded "Team Meeting 10:00 AM" shown every day)
+// WHAT'S HAPPENING — one timeline for the next 7 days: who's out today,
+// holidays, birthdays, work anniversaries and company events. These used
+// to be a separate "Who's out" strip and a "Today" card.
 // ============================================================
-class _TodayCard extends StatelessWidget {
-  const _TodayCard();
+class _HappeningFeed extends StatelessWidget {
+  const _HappeningFeed();
+
+  static const _days = 7;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final today = dateOnly(DateTime.now());
-    final holiday = holidayNameOn(today);
-    final events = demoCompanyEvents();
-    final todaysEvents = events
-        .where((e) => dateOnly(e.startsAt) == today)
-        .toList();
-    final celebrations = demoCelebrations()
-        .where((c) => c.date == today)
-        .toList();
-    final upcomingEvents =
-        events.where((e) => dateOnly(e.startsAt).isAfter(today)).toList()
-          ..sort((a, b) => a.startsAt.compareTo(b.startsAt));
-    final next = upcomingEvents.isEmpty ? null : upcomingEvents.first;
+    final until = today.add(const Duration(days: _days));
+    bool inWindow(DateTime d) =>
+        !dateOnly(d).isBefore(today) && !dateOnly(d).isAfter(until);
 
-    final rows = <(String, String)>[
-      if (holiday != null) ('🎊 $holiday', 'Public holiday'),
-      for (final e in todaysEvents) ('⭐ ${e.title}', clockTime(e.startsAt)),
-      for (final c in celebrations)
-        (
-          c.kind == CelebrationKind.birthday
-              ? "🎂 ${c.name}'s birthday"
-              : '🎉 ${c.name} · ${c.years} years',
-          'Say hi!',
-        ),
-    ];
+    final items =
+        <({DateTime date, IconData icon, String title, String? detail})>[
+          for (final l in demoTeamLeave().where((l) => l.coversDay(today)))
+            (
+              date: today,
+              icon: CupertinoIcons.airplane,
+              title: l10n.feedOut(l.name),
+              detail: l.leaveType,
+            ),
+          for (final m in getUpcomingMarkers(
+            limit: 5,
+            typesFilter: const {
+              MarkerType.governmentHoliday,
+              MarkerType.companyHoliday,
+            },
+          ))
+            if (inWindow(m.date.toDateTime()))
+              (
+                date: dateOnly(m.date.toDateTime()),
+                icon: CupertinoIcons.flag_fill,
+                title: m.marker.title,
+                detail: labelFor(m.marker.type),
+              ),
+          for (final c in demoCelebrations().where((c) => inWindow(c.date)))
+            (
+              date: dateOnly(c.date),
+              icon: c.kind == CelebrationKind.birthday
+                  ? CupertinoIcons.gift_fill
+                  : CupertinoIcons.star_fill,
+              title: c.kind == CelebrationKind.birthday
+                  ? l10n.feedBirthday(c.name)
+                  : l10n.feedAnniversary(c.name, c.years ?? 0),
+              detail: null,
+            ),
+          for (final e in demoCompanyEvents().where(
+            (e) => inWindow(e.startsAt),
+          ))
+            (
+              date: dateOnly(e.startsAt),
+              icon: CupertinoIcons.calendar_badge_plus,
+              title: e.title,
+              detail: clockTime(e.startsAt),
+            ),
+        ]..sort((a, b) => a.date.compareTo(b.date));
+
+    String when(DateTime d) {
+      final diff = d.difference(today).inDays;
+      if (diff == 0) return l10n.feedToday;
+      if (diff == 1) return l10n.feedTomorrow;
+      return dayDate(d);
+    }
+
+    final subtle = CupertinoColors.systemGrey.resolveFrom(context);
 
     return Padding(
       padding: const EdgeInsets.only(top: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionTitle('Today'),
-          const SizedBox(height: 10),
-          SectionCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (rows.isEmpty)
-                  const Text(
-                    'Nothing special today.',
-                    style: TextStyle(fontSize: 14),
-                  )
-                else
-                  for (final (title, detail) in rows)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ),
-                          Text(
-                            detail,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: CupertinoColors.systemGrey.resolveFrom(
-                                context,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                if (next != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Next: ${next.title} · ${dayDate(next.startsAt)}',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      color: CupertinoColors.systemGrey.resolveFrom(context),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () => Navigator.push(
-              context,
-              CupertinoPageRoute(
-                builder: (_) => const AttendanceModuleScreen(),
+          _SectionTitle(
+            l10n.whatsHappening,
+            trailing: CupertinoButton(
+              padding: EdgeInsets.zero,
+              minimumSize: Size.zero,
+              onPressed: () => Navigator.push(
+                context,
+                CupertinoPageRoute(builder: (_) => const EventsScreen()),
+              ),
+              child: Text(
+                '${l10n.tabEvents} →',
+                style: const TextStyle(fontSize: 14),
               ),
             ),
-            child: const Text(
-              'View attendance history →',
-              style: TextStyle(fontSize: 14),
-            ),
+          ),
+          const SizedBox(height: 10),
+          SectionCard(
+            child: items.isEmpty
+                ? Text(l10n.feedNothing, style: const TextStyle(fontSize: 14))
+                : Column(
+                    children: [
+                      for (final item in items.take(6))
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Row(
+                            children: [
+                              Icon(
+                                item.icon,
+                                size: 18,
+                                color: AppColors.karmaRed,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 14),
+                                    ),
+                                    if (item.detail != null)
+                                      Text(
+                                        item.detail!,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: subtle,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Shrinks rather than pushing the row off a
+                              // narrow screen at large text sizes.
+                              Flexible(
+                                flex: 0,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.sizeOf(context).width * 0.28,
+                                  ),
+                                  child: Text(
+                                    when(item.date),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.end,
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      color: subtle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
           ),
         ],
       ),

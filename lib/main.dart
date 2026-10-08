@@ -3,10 +3,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import 'data/company_demo.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/app_lock_gate.dart';
 import 'screens/welcome_screen.dart';
 import 'state/app_lock_state.dart';
+import 'state/audit_log_state.dart';
 import 'state/auth_state.dart';
 import 'state/attendance_state.dart';
 import 'state/leave_balance_state.dart';
@@ -15,16 +17,25 @@ import 'state/locale_state.dart';
 import 'state/notification_state.dart';
 import 'state/push_notification_state.dart';
 import 'state/theme_state.dart';
+import 'state/hiring_state.dart';
+import 'state/hr_inbox_state.dart';
 import 'state/hr_request_state.dart';
 import 'state/kudos_state.dart';
 import 'state/feedback_state.dart';
+import 'state/checklist_state.dart';
+import 'state/company_holidays_state.dart';
 import 'state/document_wallet_state.dart';
+import 'state/employee_documents_state.dart';
+import 'state/employee_records_state.dart';
 import 'state/emergency_info_state.dart';
 import 'state/event_rsvp_state.dart';
 import 'state/expense_state.dart';
 import 'state/goals_state.dart';
+import 'state/notices_state.dart';
 import 'state/onboarding_state.dart';
 import 'state/overtime_state.dart';
+import 'state/payroll_state.dart';
+import 'state/reviews_state.dart';
 import 'state/safety_state.dart';
 import 'state/survey_state.dart';
 import 'state/training_state.dart';
@@ -40,7 +51,20 @@ void main() {
 /// provider, or the other way round.
 List<SingleChildWidget> appProviders() => [
   ChangeNotifierProvider(create: (context) => AuthState()),
+  // The CEO portal's demo company (about 290 people). Read-only.
+  Provider<CompanyDemo>(create: (context) => CompanyDemo.generate()),
   ChangeNotifierProvider(create: (context) => LocaleState()),
+  // Company data, not per-user: deliberately NOT reset on logout.
+  ChangeNotifierProvider(create: (context) => EmployeeRecordsState()),
+  ChangeNotifierProvider(create: (context) => EmployeeDocumentsState()),
+  ChangeNotifierProvider(create: (context) => ChecklistState()),
+  ChangeNotifierProvider(create: (context) => HrInboxState()),
+  ChangeNotifierProvider(create: (context) => ReviewsState()),
+  ChangeNotifierProvider(create: (context) => HiringState()),
+  ChangeNotifierProvider(create: (context) => CompanyHolidaysState()),
+  ChangeNotifierProvider(create: (context) => PayrollState()),
+  ChangeNotifierProvider(create: (context) => NoticesState()),
+  ChangeNotifierProvider(create: (context) => AuditLogState()),
   ChangeNotifierProvider(create: (context) => AppLockState()),
   ChangeNotifierProvider(create: (context) => AttendanceState()),
   ChangeNotifierProvider(create: (context) => ThemeState()),
