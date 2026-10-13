@@ -1717,4 +1717,213 @@ class AppLocalizationsNe extends AppLocalizations {
 
   @override
   String get hrAuditTeamDeleted => 'टोली मेटाइयो';
+
+  @override
+  String get emailLabel => 'इमेल';
+
+  @override
+  String get emailHint => 'you@company.com';
+
+  @override
+  String get loginErrEmpty => 'आफ्नो इमेल र पासवर्ड लेख्नुहोस्।';
+
+  @override
+  String get loginErrWrong => 'इमेल वा पासवर्ड मिलेन।';
+
+  @override
+  String get loginErrNoProfile =>
+      'तपाईंको खाता अझै तयार भएको छैन। आफ्नो कम्पनीको एडमिनलाई सोध्नुहोस्।';
+
+  @override
+  String get loginErrDeactivated =>
+      'तपाईंको खाता निष्क्रिय गरिएको छ। गल्ती भएको जस्तो लागे आफ्नो कम्पनीको एचआरलाई सोध्नुहोस्।';
+
+  @override
+  String get loginErrNetwork =>
+      'साइन इन गर्न सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get hrSaveFailedTitle => 'सुरक्षित गर्न सकिएन';
+
+  @override
+  String get hrErrDuplicateStaffId =>
+      'त्यो स्टाफ आईडी अहिले अरू कसैले लिइसक्यो। जाँचेर फेरि सेभ गर्नुहोस्।';
+
+  @override
+  String get hrErrDuplicateEmail => 'अर्को कर्मचारीसँग पहिले नै त्यही इमेल छ।';
+
+  @override
+  String get hrErrNotAllowed => 'तपाईंलाई यो गर्ने अनुमति छैन।';
+
+  @override
+  String get hrErrSaveNetwork =>
+      'सर्भरसँग जोडिन सकिएन। इन्टरनेट जाँचेर फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get hrRefresh => 'रिफ्रेस';
+
+  @override
+  String get hrLoadFailed =>
+      'कर्मचारीहरू लोड गर्न सकिएन। फेरि प्रयास गर्न रिफ्रेस थिच्नुहोस्।';
+
+  @override
+  String get hrErrDuplicateName =>
+      'त्यो नाम पहिले नै प्रयोगमा छ। अर्को छान्नुहोस्।';
+
+  @override
+  String get hrErrConflict =>
+      'अरू कसैले यही समयमा यो परिवर्तन गर्नुभयो। फेरि लोड गरिएको छ: जाँचेर फेरि प्रयास गर्नुहोस्।';
+
+  @override
+  String get hrPickDepartment => 'विभाग छान्नुहोस्';
+
+  @override
+  String get hrPickBranch => 'शाखा छान्नुहोस्';
+
+  @override
+  String get hrNewDepartment => 'नयाँ विभाग…';
+
+  @override
+  String get hrNewBranch => 'नयाँ शाखा…';
+
+  @override
+  String get hrDepartmentName => 'विभागको नाम';
+
+  @override
+  String get hrBranchName => 'शाखाको नाम';
+
+  @override
+  String get hrNotChosen => 'छान्नुहोस्';
+
+  @override
+  String get add => 'थप्नुहोस्';
+
+  @override
+  String get activateLink => 'पहिलो पटक? आफ्नो खाता सक्रिय गर्नुहोस्';
+
+  @override
+  String get activateTitle => 'खाता सक्रिय गर्नुहोस्';
+
+  @override
+  String get activateIntro =>
+      'तपाईंको एचआरले निमन्त्रणा गरेको कार्य इमेल प्रयोग गर्नुहोस् र पासवर्ड रोज्नुहोस्। हामी कोड इमेल गर्नेछौं।';
+
+  @override
+  String get activateSendCode => 'कोड पठाउनुहोस्';
+
+  @override
+  String codeSentTo(String email) {
+    return 'हामीले $email मा कोड पठाएका छौं। तल हाल्नुहोस्।';
+  }
+
+  @override
+  String get codeLabel => 'इमेलमा आएको कोड';
+
+  @override
+  String get activateAction => 'सक्रिय गर्नुहोस्';
+
+  @override
+  String get resendCode => 'नयाँ कोड पठाउनुहोस्';
+
+  @override
+  String get newPasswordLabel => 'नयाँ पासवर्ड';
+
+  @override
+  String get confirmPasswordLabel => 'पासवर्ड पुष्टि गर्नुहोस्';
+
+  @override
+  String get currentPasswordLabel => 'हालको पासवर्ड';
+
+  @override
+  String get passwordHelp => 'कम्तीमा ८ अक्षर।';
+
+  @override
+  String get authErrEmail => 'मान्य इमेल ठेगाना हाल्नुहोस्।';
+
+  @override
+  String get authErrCode =>
+      'त्यो कोड गलत छ वा म्याद सकिएको छ। जाँच्नुहोस् वा नयाँ कोड मगाउनुहोस्।';
+
+  @override
+  String get authErrWeak =>
+      'त्यो पासवर्ड कमजोर छ। लामो पासवर्ड प्रयास गर्नुहोस्।';
+
+  @override
+  String get authErrCurrent => 'तपाईंको हालको पासवर्ड मिलेन।';
+
+  @override
+  String get pwErrShort => 'कम्तीमा ८ अक्षर प्रयोग गर्नुहोस्।';
+
+  @override
+  String get pwErrMismatch => 'दुई पासवर्ड मिलेन।';
+
+  @override
+  String get pwErrSame => 'हालको भन्दा फरक पासवर्ड रोज्नुहोस्।';
+
+  @override
+  String get forgotTitle => 'पासवर्ड रिसेट गर्नुहोस्';
+
+  @override
+  String get forgotIntro =>
+      'आफ्नो इमेल हाल्नुहोस्। पासवर्ड रिसेट गर्न हामी कोड पठाउनेछौं।';
+
+  @override
+  String get forgotAction => 'पासवर्ड रिसेट गर्नुहोस्';
+
+  @override
+  String get passwordResetTitle => 'पासवर्ड परिवर्तन भयो';
+
+  @override
+  String get passwordResetBody => 'आफ्नो नयाँ पासवर्डले साइन इन गर्नुहोस्।';
+
+  @override
+  String get accountHeader => 'खाता';
+
+  @override
+  String get changePasswordTitle => 'पासवर्ड परिवर्तन';
+
+  @override
+  String get changePasswordAction => 'पासवर्ड परिवर्तन गर्नुहोस्';
+
+  @override
+  String get changePasswordDone => 'तपाईंको पासवर्ड परिवर्तन भयो।';
+
+  @override
+  String get hrAccountHeader => 'साइन इन खाता';
+
+  @override
+  String get hrAccountNone => 'अहिलेसम्म लगइन छैन';
+
+  @override
+  String hrAccountInvited(String email) {
+    return '$email मा निमन्त्रणा गरिएको छ। सक्रिय गर्न पर्खँदै।';
+  }
+
+  @override
+  String get hrAccountActive => 'लगइन छ';
+
+  @override
+  String get hrInviteAction => 'साइन इनको निमन्त्रणा';
+
+  @override
+  String get hrInviteChange => 'निमन्त्रणा परिवर्तन';
+
+  @override
+  String get hrInviteCancel => 'निमन्त्रणा रद्द';
+
+  @override
+  String hrInviteTitle(String name) {
+    return '$name लाई निमन्त्रणा गर्ने?';
+  }
+
+  @override
+  String hrInviteMessage(String email) {
+    return '$email लाई खाता सक्रिय गर्न अनुमति दिइनेछ। उहाँलाई KarmaHR खोली “पहिलो पटक? आफ्नो खाता सक्रिय गर्नुहोस्” थिच्न भन्नुहोस्।';
+  }
+
+  @override
+  String get hrInviteNeedsEmail => 'पहिले यस कर्मचारीको कार्य इमेल थप्नुहोस्।';
+
+  @override
+  String get hrInviteSend => 'निमन्त्रणा';
 }

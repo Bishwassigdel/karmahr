@@ -11,6 +11,7 @@ import 'screens/app_lock_gate.dart';
 import 'screens/welcome_screen.dart';
 import 'state/app_lock_state.dart';
 import 'state/audit_log_state.dart';
+import 'state/auth_repository.dart';
 import 'state/auth_state.dart';
 import 'state/attendance_state.dart';
 import 'state/leave_balance_state.dart';
@@ -29,11 +30,18 @@ import 'state/company_holidays_state.dart';
 import 'state/document_wallet_state.dart';
 import 'state/employee_documents_state.dart';
 import 'state/employee_records_state.dart';
+import 'state/employee_repository.dart';
 import 'state/emergency_info_state.dart';
 import 'state/event_rsvp_state.dart';
 import 'state/expense_state.dart';
 import 'state/goals_state.dart';
 import 'state/notices_state.dart';
+import 'state/supabase_auth_repository.dart';
+import 'state/supabase_employee_repository.dart';
+import 'state/invite_repository.dart';
+import 'state/org_repository.dart';
+import 'state/org_state.dart';
+import 'state/teams_repository.dart';
 import 'state/teams_state.dart';
 import 'state/onboarding_state.dart';
 import 'state/overtime_state.dart';
@@ -62,12 +70,25 @@ Future<void> main() async {
 /// a hand-picked subset can pass while the real app crashes on a missing
 /// provider, or the other way round.
 List<SingleChildWidget> appProviders() => [
+  // Real login when the app was given Supabase keys, otherwise the demo.
+  Provider<AuthRepository>(
+    create: (context) =>
+        Env.hasSupabase ? SupabaseAuthRepository() : DemoAuthRepository(),
+  ),
   ChangeNotifierProvider(create: (context) => AuthState()),
   // The Executive portal's demo company (about 290 people). Read-only.
   Provider<CompanyDemo>(create: (context) => CompanyDemo.generate()),
   ChangeNotifierProvider(create: (context) => LocaleState()),
   // Company data, not per-user: deliberately NOT reset on logout.
-  ChangeNotifierProvider(create: (context) => EmployeeRecordsState()),
+  Provider<EmployeeRepository>(
+    create: (context) => Env.hasSupabase
+        ? SupabaseEmployeeRepository()
+        : DemoEmployeeRepository(),
+  ),
+  ChangeNotifierProvider(
+    create: (context) =>
+        EmployeeRecordsState(repository: context.read<EmployeeRepository>()),
+  ),
   ChangeNotifierProvider(create: (context) => EmployeeDocumentsState()),
   ChangeNotifierProvider(create: (context) => ChecklistState()),
   ChangeNotifierProvider(create: (context) => HrInboxState()),
@@ -76,7 +97,25 @@ List<SingleChildWidget> appProviders() => [
   ChangeNotifierProvider(create: (context) => CompanyHolidaysState()),
   ChangeNotifierProvider(create: (context) => PayrollState()),
   ChangeNotifierProvider(create: (context) => NoticesState()),
-  ChangeNotifierProvider(create: (context) => TeamsState()),
+  Provider<TeamsRepository>(
+    create: (context) =>
+        Env.hasSupabase ? SupabaseTeamsRepository() : DemoTeamsRepository(),
+  ),
+  ChangeNotifierProvider(
+    create: (context) =>
+        TeamsState(repository: context.read<TeamsRepository>()),
+  ),
+  Provider<OrgRepository>(
+    create: (context) =>
+        Env.hasSupabase ? SupabaseOrgRepository() : DemoOrgRepository(),
+  ),
+  ChangeNotifierProvider(
+    create: (context) => OrgState(repository: context.read<OrgRepository>()),
+  ),
+  Provider<InviteRepository>(
+    create: (context) =>
+        Env.hasSupabase ? SupabaseInviteRepository() : DemoInviteRepository(),
+  ),
   ChangeNotifierProvider(create: (context) => AuditLogState()),
   ChangeNotifierProvider(create: (context) => AppLockState()),
   ChangeNotifierProvider(create: (context) => AttendanceState()),

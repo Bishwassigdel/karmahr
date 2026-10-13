@@ -3049,6 +3049,384 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Team deleted'**
   String get hrAuditTeamDeleted;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @emailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'you@company.com'**
+  String get emailHint;
+
+  /// No description provided for @loginErrEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email and password.'**
+  String get loginErrEmpty;
+
+  /// No description provided for @loginErrWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email or password.'**
+  String get loginErrWrong;
+
+  /// No description provided for @loginErrNoProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account isn\'t set up yet. Ask your company admin.'**
+  String get loginErrNoProfile;
+
+  /// No description provided for @loginErrDeactivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account has been deactivated. Ask your company\'s HR if this is a mistake.'**
+  String get loginErrDeactivated;
+
+  /// No description provided for @loginErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign in. Check your internet and try again.'**
+  String get loginErrNetwork;
+
+  /// No description provided for @hrSaveFailedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save'**
+  String get hrSaveFailedTitle;
+
+  /// No description provided for @hrErrDuplicateStaffId.
+  ///
+  /// In en, this message translates to:
+  /// **'That Staff ID has just been taken by someone else. Check it and save again.'**
+  String get hrErrDuplicateStaffId;
+
+  /// No description provided for @hrErrDuplicateEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Another employee already has that email address.'**
+  String get hrErrDuplicateEmail;
+
+  /// No description provided for @hrErrNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have permission to do that.'**
+  String get hrErrNotAllowed;
+
+  /// No description provided for @hrErrSaveNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the server. Check your internet and try again.'**
+  String get hrErrSaveNetwork;
+
+  /// No description provided for @hrRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get hrRefresh;
+
+  /// No description provided for @hrLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the employees. Tap refresh to try again.'**
+  String get hrLoadFailed;
+
+  /// No description provided for @hrErrDuplicateName.
+  ///
+  /// In en, this message translates to:
+  /// **'That name is already used. Choose another.'**
+  String get hrErrDuplicateName;
+
+  /// No description provided for @hrErrConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone changed this at the same time. It has been reloaded: check it and try again.'**
+  String get hrErrConflict;
+
+  /// No description provided for @hrPickDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a department'**
+  String get hrPickDepartment;
+
+  /// No description provided for @hrPickBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a branch'**
+  String get hrPickBranch;
+
+  /// No description provided for @hrNewDepartment.
+  ///
+  /// In en, this message translates to:
+  /// **'New department…'**
+  String get hrNewDepartment;
+
+  /// No description provided for @hrNewBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'New branch…'**
+  String get hrNewBranch;
+
+  /// No description provided for @hrDepartmentName.
+  ///
+  /// In en, this message translates to:
+  /// **'Department name'**
+  String get hrDepartmentName;
+
+  /// No description provided for @hrBranchName.
+  ///
+  /// In en, this message translates to:
+  /// **'Branch name'**
+  String get hrBranchName;
+
+  /// No description provided for @hrNotChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get hrNotChosen;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @activateLink.
+  ///
+  /// In en, this message translates to:
+  /// **'First time here? Activate your account'**
+  String get activateLink;
+
+  /// No description provided for @activateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate your account'**
+  String get activateTitle;
+
+  /// No description provided for @activateIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the work email your HR invited, and choose a password. We\'ll email you a code.'**
+  String get activateIntro;
+
+  /// No description provided for @activateSendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get activateSendCode;
+
+  /// No description provided for @codeSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a code to {email}. Enter it below.'**
+  String codeSentTo(String email);
+
+  /// No description provided for @codeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the email'**
+  String get codeLabel;
+
+  /// No description provided for @activateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get activateAction;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new code'**
+  String get resendCode;
+
+  /// No description provided for @newPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPasswordLabel;
+
+  /// No description provided for @confirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get confirmPasswordLabel;
+
+  /// No description provided for @currentPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Current password'**
+  String get currentPasswordLabel;
+
+  /// No description provided for @passwordHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters.'**
+  String get passwordHelp;
+
+  /// No description provided for @authErrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get authErrEmail;
+
+  /// No description provided for @authErrCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong or has expired. Check it, or ask for a new one.'**
+  String get authErrCode;
+
+  /// No description provided for @authErrWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is too weak. Try a longer one.'**
+  String get authErrWeak;
+
+  /// No description provided for @authErrCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current password isn\'t right.'**
+  String get authErrCurrent;
+
+  /// No description provided for @pwErrShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters.'**
+  String get pwErrShort;
+
+  /// No description provided for @pwErrMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two passwords don\'t match.'**
+  String get pwErrMismatch;
+
+  /// No description provided for @pwErrSame.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a password different from your current one.'**
+  String get pwErrSame;
+
+  /// No description provided for @forgotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset your password'**
+  String get forgotTitle;
+
+  /// No description provided for @forgotIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your email. We\'ll send a code to reset your password.'**
+  String get forgotIntro;
+
+  /// No description provided for @forgotAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get forgotAction;
+
+  /// No description provided for @passwordResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed'**
+  String get passwordResetTitle;
+
+  /// No description provided for @passwordResetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with your new password.'**
+  String get passwordResetBody;
+
+  /// No description provided for @accountHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get accountHeader;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @changePasswordAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordAction;
+
+  /// No description provided for @changePasswordDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password was changed.'**
+  String get changePasswordDone;
+
+  /// No description provided for @hrAccountHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in account'**
+  String get hrAccountHeader;
+
+  /// No description provided for @hrAccountNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No login yet'**
+  String get hrAccountNone;
+
+  /// No description provided for @hrAccountInvited.
+  ///
+  /// In en, this message translates to:
+  /// **'Invited at {email}. Waiting for them to activate.'**
+  String hrAccountInvited(String email);
+
+  /// No description provided for @hrAccountActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Has a login'**
+  String get hrAccountActive;
+
+  /// No description provided for @hrInviteAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to sign in'**
+  String get hrInviteAction;
+
+  /// No description provided for @hrInviteChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change invite'**
+  String get hrInviteChange;
+
+  /// No description provided for @hrInviteCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel invite'**
+  String get hrInviteCancel;
+
+  /// No description provided for @hrInviteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite {name}?'**
+  String hrInviteTitle(String name);
+
+  /// No description provided for @hrInviteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{email} will be allowed to activate an account. Ask them to open KarmaHR and tap “First time here? Activate your account”.'**
+  String hrInviteMessage(String email);
+
+  /// No description provided for @hrInviteNeedsEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a work email to this employee first.'**
+  String get hrInviteNeedsEmail;
+
+  /// No description provided for @hrInviteSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite'**
+  String get hrInviteSend;
 }
 
 class _AppLocalizationsDelegate

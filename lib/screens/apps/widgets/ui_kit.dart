@@ -354,6 +354,130 @@ Future<T?> pickFromList<T>(
   return done ? items[index] : null;
 }
 
+/// Pick one of [items] from a sheet, or add a new one: the last row,
+/// [addLabel], asks for a name and hands it to [onAdd], which saves it and
+/// returns why it couldn't (or null). Returns the picked or added name, or
+/// null if the person backed out or the add failed (they were told why).
+Future<String?> pickOrAdd(
+  BuildContext context, {
+  required String title,
+  required List<String> items,
+  String? selected,
+  required String addLabel,
+  required String addPlaceholder,
+  required String cancelLabel,
+  required String addButton,
+  required String Function(Object failure) failureMessage,
+  required String failureTitle,
+  required Future<Object?> Function(String name) onAdd,
+}) async {
+  const addNew = '\u0000add';
+  final picked = await showCupertinoModalPopup<String>(
+    context: context,
+    builder: (sheet) => CupertinoActionSheet(
+      title: Text(title),
+      actions: [
+        for (final item in items)
+          CupertinoActionSheetAction(
+            isDefaultAction: item == selected,
+            onPressed: () => Navigator.pop(sheet, item),
+            child: Text(item, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+        CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(sheet, addNew),
+          child: Text(addLabel),
+        ),
+      ],
+      cancelButton: CupertinoActionSheetAction(
+        onPressed: () => Navigator.pop(sheet),
+        child: Text(cancelLabel),
+      ),
+    ),
+  );
+  if (picked != addNew || !context.mounted) return picked;
+
+  final name = await showCupertinoDialog<String>(
+    context: context,
+    builder: (_) => TextPromptDialog(
+      title: addLabel,
+      placeholder: addPlaceholder,
+      cancelLabel: cancelLabel,
+      okLabel: addButton,
+    ),
+  );
+  if (name == null || name.trim().isEmpty || !context.mounted) return null;
+  final failure = await onAdd(name.trim());
+  if (failure != null) {
+    if (context.mounted) {
+      await showMessage(
+        context,
+        title: failureTitle,
+        message: failureMessage(failure),
+      );
+    }
+    return null;
+  }
+  return name.trim();
+}
+
+/// Asks for one line of text. Returns it, or null if cancelled. Owns its
+/// controller, so it is disposed only when the dialog is truly gone.
+class TextPromptDialog extends StatefulWidget {
+  final String title;
+  final String placeholder;
+  final String initial;
+  final String cancelLabel;
+  final String okLabel;
+
+  const TextPromptDialog({
+    super.key,
+    required this.title,
+    required this.placeholder,
+    this.initial = '',
+    required this.cancelLabel,
+    required this.okLabel,
+  });
+
+  @override
+  State<TextPromptDialog> createState() => _TextPromptDialogState();
+}
+
+class _TextPromptDialogState extends State<TextPromptDialog> {
+  late final _text = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _text.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoAlertDialog(
+      title: Text(widget.title),
+      content: Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: CupertinoTextField(
+          controller: _text,
+          autofocus: true,
+          placeholder: widget.placeholder,
+        ),
+      ),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text(widget.cancelLabel),
+        ),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.pop(context, _text.text),
+          child: Text(widget.okLabel),
+        ),
+      ],
+    );
+  }
+}
+
 /// Opens the phone dialer. Spaces/dashes are stripped so "+977 98..."
 /// dials correctly; failure (e.g. a tablet with no phone) shows a message.
 Future<void> callNumber(BuildContext context, String number) async {

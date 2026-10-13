@@ -5,12 +5,15 @@
 // [EmployeeRecordsState.directory], so an employee HR adds or deactivates
 // shows up or disappears everywhere at once.
 
+import 'dart:async' show unawaited;
+
 import 'package:flutter/foundation.dart';
 
 import '../data/current_employee.dart' show EmployeeProfile;
 import '../data/employee_directory_data.dart';
 import '../domain/employee_validation.dart';
 import '../domain/nepal/tax_slabs.dart';
+import 'employee_repository.dart';
 
 enum EmploymentStatus { active, inactive }
 
@@ -146,14 +149,131 @@ class EmployeeRecord {
 }
 
 class EmployeeRecordsState extends ChangeNotifier {
-  final List<EmployeeRecord> _records = _seed();
+  final EmployeeRepository _repository;
+
+  // With a backend this starts empty and is filled by [refresh]; without one
+  // it holds the built-in demo people.
+  late final List<EmployeeRecord> _records;
 
   // Rebuilt only when records change, so the same Employee objects are
   // handed out between changes (screens compare them by identity).
   List<Employee> _directory = const [];
 
-  EmployeeRecordsState() {
+  EmployeeRecordsState({EmployeeRepository? repository})
+    : _repository = repository ?? DemoEmployeeRepository() {
+    _records = _repository.usesBackend ? [] : _seed();
     _rebuildDirectory();
+  }
+
+  // Loading from the backend: whether a load is under way, and whether the
+  // last one failed (so a screen can say so and offer to try again).
+  bool _loading = false;
+  bool get isLoading => _loading;
+  bool _loadFailed = false;
+  bool get loadFailed => _loadFailed;
+
+  // Bumped when the signed-in person leaves, so a load that was still on its
+  // way can't put the old company's people back on screen.
+  int _generation = 0;
+
+  /// Loads the company's records from the backend (nothing to do without
+  /// one). Call it after signing in and whenever a screen opens, so changes
+  /// made on another device appear.
+  Future<void> refresh() async {
+    if (!_repository.usesBackend) return;
+    final started = _generation;
+    _loading = true;
+    notifyListeners();
+    try {
+      final loaded = await _repository.loadAll();
+      if (started != _generation) return; // signed out meanwhile
+      _records
+        ..clear()
+        ..addAll(loaded);
+      _loadFailed = false;
+    } catch (_) {
+      if (started != _generation) return;
+      _loadFailed = true;
+    }
+    _loading = false;
+    _changed();
+  }
+
+  /// Forgets every record when the signed-in person leaves, so the next
+  /// person never sees the last company's people. Only with a backend: the
+  /// demo's company data deliberately stays (see session.dart).
+  void clearForSignOut() {
+    if (!_repository.usesBackend) return;
+    _generation++;
+    _records.clear();
+    _loading = false;
+    _loadFailed = false;
+    _changed();
+  }
+
+  // ---- Saving: the repository first, the screen's list only after it worked.
+
+  /// Saves a new person. Returns why it failed, or null when it worked.
+  Future<SaveFailure?> addAndSave(EmployeeRecord record) async {
+    try {
+      await _repository.insert(record);
+    } on SaveFailure catch (failure) {
+      _refreshAfter(failure);
+      return failure;
+    }
+    add(record);
+    return null;
+  }
+
+  Future<SaveFailure?> updateAndSave(EmployeeRecord record) async {
+    try {
+      await _repository.update(record);
+    } on SaveFailure catch (failure) {
+      return failure;
+    }
+    update(record);
+    return null;
+  }
+
+  Future<SaveFailure?> setStatusAndSave(
+    String id,
+    EmploymentStatus status,
+  ) async {
+    try {
+      await _repository.setStatus(id, status);
+    } on SaveFailure catch (failure) {
+      return failure;
+    }
+    setStatus(id, status);
+    return null;
+  }
+
+  /// Imports like [importCsv], but saves the good rows first. If the save
+  /// fails nothing is added and [failure] says why.
+  Future<({CsvImportResult result, SaveFailure? failure})> importCsvAndSave(
+    String csv, {
+    DateTime? today,
+  }) async {
+    final parsed = _parseCsv(csv, today);
+    final result = CsvImportResult(parsed.records.length, parsed.skipped);
+    if (parsed.records.isEmpty) return (result: result, failure: null);
+    try {
+      await _repository.insertMany(parsed.records);
+    } on SaveFailure catch (failure) {
+      _refreshAfter(failure);
+      return (result: CsvImportResult(0, parsed.skipped), failure: failure);
+    }
+    _records.addAll(parsed.records);
+    _changed();
+    return (result: result, failure: null);
+  }
+
+  // Two people added at once can pick the same Staff ID; reload so the next
+  // try gets a free one.
+  void _refreshAfter(SaveFailure failure) {
+    if (failure.problem == SaveProblem.duplicateStaffId) {
+      unawaited(refresh());
+    }
   }
 
   // The first eight come from the demo directory, so names, phones and
@@ -354,14 +474,25 @@ class EmployeeRecordsState extends ChangeNotifier {
     return null;
   }
 
-  /// The next free staff ID: one more than the highest number in use.
-  String nextId() {
+  /// The next free staff ID: one more than the highest number in use, in
+  /// the same style ("MB-24072", "HT-006"). [alsoTaken] are people about to
+  /// be added, so a batch gets consecutive numbers.
+  String nextId([Iterable<EmployeeRecord> alsoTaken = const []]) {
     var highest = 0;
-    for (final r in _records) {
-      final n = int.tryParse(r.id.split('-').last) ?? 0;
-      if (n > highest) highest = n;
+    var prefix = 'MB';
+    var width = 1;
+    for (final r in [..._records, ...alsoTaken]) {
+      final parts = r.id.split('-');
+      final n = int.tryParse(parts.last) ?? 0;
+      if (n > highest) {
+        highest = n;
+        prefix = parts.length > 1
+            ? parts.sublist(0, parts.length - 1).join('-')
+            : 'MB';
+        width = parts.last.length;
+      }
     }
-    return 'MB-${highest + 1}';
+    return '$prefix-${(highest + 1).toString().padLeft(width, '0')}';
   }
 
   /// Every record as CSV (a header, then one row each), for a spreadsheet.
@@ -396,9 +527,23 @@ class EmployeeRecordsState extends ChangeNotifier {
   /// first line starting with "Name" is taken as a header and skipped.
   /// A bad row is skipped and reported; the good ones still go in.
   CsvImportResult importCsv(String csv, {DateTime? today}) {
+    final parsed = _parseCsv(csv, today);
+    if (parsed.records.isNotEmpty) {
+      _records.addAll(parsed.records);
+      _changed();
+    }
+    return CsvImportResult(parsed.records.length, parsed.skipped);
+  }
+
+  /// Reads [csv] into new records (not yet added) and the rows to skip.
+  ({
+    List<EmployeeRecord> records,
+    List<({int line, ImportProblem problem})> skipped,
+  })
+  _parseCsv(String csv, DateTime? today) {
     final joined = today ?? DateTime.now();
     final skipped = <({int line, ImportProblem problem})>[];
-    var added = 0;
+    final records = <EmployeeRecord>[];
     var first = true;
 
     final lines = csv.split(RegExp(r'\r?\n'));
@@ -440,9 +585,9 @@ class EmployeeRecordsState extends ChangeNotifier {
         continue;
       }
 
-      _records.add(
+      records.add(
         EmployeeRecord(
-          id: nextId(),
+          id: nextId(records),
           name: cells[0],
           jobTitle: cells[1],
           department: cells[2],
@@ -458,11 +603,9 @@ class EmployeeRecordsState extends ChangeNotifier {
           filingStatus: FilingStatus.single,
         ),
       );
-      added++;
     }
 
-    if (added > 0) _changed();
-    return CsvImportResult(added, skipped);
+    return (records: records, skipped: skipped);
   }
 
   /// One CSV (or tab-separated) line to trimmed cells; double quotes keep a

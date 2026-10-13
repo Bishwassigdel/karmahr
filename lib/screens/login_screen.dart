@@ -2,7 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../state/auth_repository.dart';
 import '../state/auth_state.dart';
+import '../state/session.dart';
+import 'account/activate_account_screen.dart';
+import 'account/forgot_password_screen.dart';
 import 'portal_home.dart';
 import '../theme/app_colors.dart';
 
@@ -31,6 +35,11 @@ class _LoginScreenState extends State<LoginScreen> {
   // the real role on login.
   UserRole _demoRole = UserRole.employee;
 
+  // Real login: true while we wait for the server, and what to tell the
+  // person if it didn't work.
+  bool _busy = false;
+  String? _error;
+
   // ============================================================
   // DISPOSE
   // ============================================================
@@ -42,6 +51,58 @@ class _LoginScreenState extends State<LoginScreen> {
     _staffIdController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  // ============================================================
+  // SIGN IN
+  // ============================================================
+  //
+  // Demo (no backend): sign in with the picked role.
+  // Real: check the email and password with the server, then open the
+  // portal for the role in the person's profile.
+  Future<void> _signIn() async {
+    final repo = context.read<AuthRepository>();
+    final auth = context.read<AuthState>();
+    final l10n = context.l10n;
+
+    if (!repo.usesBackend) {
+      auth.signIn(_demoRole);
+      Navigator.pushReplacement(
+        context,
+        CupertinoPageRoute(builder: (context) => portalHomeFor(_demoRole)),
+      );
+      return;
+    }
+
+    final email = _staffIdController.text.trim();
+    final password = _passwordController.text;
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _error = l10n.loginErrEmpty);
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final user = await repo.signIn(email, password);
+      if (!mounted) return;
+      auth.signInAs(user);
+      startSession(context);
+      Navigator.pushReplacement(
+        context,
+        CupertinoPageRoute(builder: (context) => portalHomeFor(user.role)),
+      );
+    } on AuthFailure catch (failure) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = failure.reason == AuthFailureReason.wrongCredentials
+            ? l10n.loginErrWrong
+            : failure.reason.accountLabel(l10n);
+      });
+    }
   }
 
   // ============================================================
@@ -83,10 +144,14 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
     bool obscureText = false,
     Widget? suffix,
+    TextInputType? keyboardType,
   }) {
     return CupertinoTextField(
       // Connect the field with its controller
       controller: controller,
+
+      keyboardType: keyboardType,
+      autocorrect: false,
 
       // Placeholder text inside the field
       placeholder: placeholder,
@@ -136,6 +201,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final background = AppColors.background.resolveFrom(context);
     final textPrimary = AppColors.textPrimary.resolveFrom(context);
     final l10n = context.l10n;
+    // Real login (email) or the demo (Staff ID + role picker).
+    final real = context.read<AuthRepository>().usesBackend;
 
     return CupertinoPageScaffold(
       backgroundColor: background,
@@ -220,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
               // STAFF ID LABEL
               // ==================================================
               Text(
-                l10n.staffIdLabel,
+                real ? l10n.emailLabel : l10n.staffIdLabel,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -236,8 +303,9 @@ class _LoginScreenState extends State<LoginScreen> {
               // ==================================================
               _buildField(
                 controller: _staffIdController,
-                placeholder: l10n.staffIdHint,
-                icon: CupertinoIcons.person,
+                placeholder: real ? l10n.emailHint : l10n.staffIdHint,
+                icon: real ? CupertinoIcons.mail : CupertinoIcons.person,
+                keyboardType: real ? TextInputType.emailAddress : null,
               ),
 
               const SizedBox(height: 20),
@@ -310,7 +378,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   minimumSize: Size.zero,
 
                   onPressed: () {
-                    _showMessage(l10n.forgotPasswordUnavailable);
+                    if (!real) {
+                      _showMessage(l10n.forgotPasswordUnavailable);
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (_) => const ForgotPasswordScreen(),
+                      ),
+                    );
                   },
 
                   child: Text(
@@ -327,54 +404,69 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 20),
 
-              // ==================================================
-              // DEMO ROLE PICKER
-              // ==================================================
-              Text(
-                l10n.demoRoleLabel,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                  decoration: TextDecoration.none,
+              if (!real) ...[
+                // ==================================================
+                // DEMO ROLE PICKER
+                // ==================================================
+                Text(
+                  l10n.demoRoleLabel,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimary,
+                    decoration: TextDecoration.none,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 8),
+                const SizedBox(height: 8),
 
-              SizedBox(
-                width: double.infinity,
-                child: CupertinoSlidingSegmentedControl<UserRole>(
-                  groupValue: _demoRole,
-                  onValueChanged: (role) {
-                    if (role != null) setState(() => _demoRole = role);
-                  },
-                  children: {
-                    for (final role in demoLoginRoles)
-                      role: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Text(
-                          role.label(l10n),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                SizedBox(
+                  width: double.infinity,
+                  child: CupertinoSlidingSegmentedControl<UserRole>(
+                    groupValue: _demoRole,
+                    onValueChanged: (role) {
+                      if (role != null) setState(() => _demoRole = role);
+                    },
+                    children: {
+                      for (final role in demoLoginRoles)
+                        role: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Text(
+                            role.label(l10n),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                  },
+                    },
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 6),
+                const SizedBox(height: 6),
 
-              Text(
-                l10n.demoRoleNote,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: CupertinoColors.systemGrey,
-                  decoration: TextDecoration.none,
+                Text(
+                  l10n.demoRoleNote,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: CupertinoColors.systemGrey,
+                    decoration: TextDecoration.none,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
+              ],
+
+              // Why a real sign-in failed.
+              if (_error != null) ...[
+                Text(
+                  _error!,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: CupertinoColors.destructiveRed,
+                    decoration: TextDecoration.none,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
 
               // ==================================================
               // SIGN IN BUTTON
@@ -389,49 +481,47 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Rounded corners
                   borderRadius: BorderRadius.circular(12),
 
-                  onPressed: () {
-                    // =================================================
-                    // TEMPORARY LOGIN
-                    // =================================================
-                    //
-                    // Currently this signs in with the demo role and
-                    // opens that role's portal.
-                    //
-                    // Later, this is where you will:
-                    // 1. Validate Staff ID
-                    // 2. Validate password
-                    // 3. Call your backend
-                    // 4. Check authentication
-                    // 5. Save login session
-                    //
-                    // =================================================
+                  // Ignored while waiting, so a double tap can't sign in twice.
+                  onPressed: _busy ? null : _signIn,
 
-                    context.read<AuthState>().signIn(_demoRole);
-                    Navigator.pushReplacement(
+                  child: _busy
+                      ? const CupertinoActivityIndicator(
+                          color: CupertinoColors.white,
+                        )
+                      : Text(
+                          l10n.signIn,
+
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+
+                            // White text on red button
+                            color: CupertinoColors.white,
+
+                            // Remove unwanted underline
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                ),
+              ),
+
+              if (real)
+                Center(
+                  child: CupertinoButton(
+                    padding: const EdgeInsets.only(top: 14),
+                    minimumSize: Size.zero,
+                    onPressed: () => Navigator.push(
                       context,
-
                       CupertinoPageRoute(
-                        builder: (context) => portalHomeFor(_demoRole),
+                        builder: (_) => const ActivateAccountScreen(),
                       ),
-                    );
-                  },
-
-                  child: Text(
-                    l10n.signIn,
-
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-
-                      // White text on red button
-                      color: CupertinoColors.white,
-
-                      // Remove unwanted underline
-                      decoration: TextDecoration.none,
+                    ),
+                    child: Text(
+                      l10n.activateLink,
+                      style: const TextStyle(fontSize: 13),
                     ),
                   ),
                 ),
-              ),
 
               const SizedBox(height: 28),
 

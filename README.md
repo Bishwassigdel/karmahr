@@ -11,15 +11,18 @@ recognize coworkers, browse the company directory, and more — all from one
 app. Built as a learning project, styled entirely with Cupertino (iOS-native
 widgets) in a red/white KarmaHR theme, with full Light/Dark mode support.
 
-There's no backend yet — **frontend-only is the current phase on purpose**;
-backend integration comes after the frontend is feature-complete. All data
-lives in shared `provider` state (or static demo data): it resets on app
-restart, and logging out explicitly wipes every provider's session data too
-(attendance, leave/HR requests, kudos, anonymous feedback, notifications) and
-re-locks the app, so the next person signing in on the same device never
-inherits the previous user's data. Login is a placeholder: any Staff
-ID/password works, and a **demo role picker** (Employee / Manager / HR) on
-the login screen decides which portal opens.
+**The backend is being built now** (Supabase; see "Backend (Supabase)"
+below and the 45-day plan in "Roadmap"). The database schema and its
+security rules are done; the screens still read demo data until each one is
+switched over, day by day. Until then all data lives in shared `provider`
+state (or static demo data): it resets on app restart, and logging out
+explicitly wipes every provider's session data too (attendance, leave/HR
+requests, kudos, anonymous feedback, notifications) and re-locks the app, so
+the next person signing in on the same device never inherits the previous
+user's data. Login is still a placeholder: any Staff ID/password works, and
+a **demo role picker** (Employee / HR / Executive) on the login screen
+decides which portal opens. Real email-and-password login replaces it on
+Day 6 of the plan.
 
 ## Features
 
@@ -142,14 +145,16 @@ KarmaHR is one app with three portals, chosen by the signed-in role
 | Role | Portal | Status |
 |---|---|---|
 | Employee | The employee app: tabs **Home** (check-in, needs-you, "What's happening" feed), **Time Off** (balances, Request button, planner, holiday calendar, history), **Time**, **Requests** (every request type in one list), **More** (My Info, Apps, Settings, Log Out). **My Info** is one tabbed profile: Job · Contact · Pay · Docs · Emergency | Done |
-| Manager | The employee app **plus a Team tab** (managers still take leave and check in) | Team tab is a placeholder; approvals come next |
-| HR | The HR portal (`lib/screens/hr/`). Phone: tabs Home (titled KarmaHR, with the notification bell), Employees, Leave, Payroll, More (Notices, Reports, Settings, Log Out). Wide screens: a sidebar with all nine sections | All nine sections built on demo data (see "HR portal" below) |
+| Manager | Not a separate login. A **team head** (an employee HR picks to lead a team) will get a My Team section in the employee app | Planned (Days 19–20); the old Manager role is postponed |
+| HR | The HR portal (`lib/screens/hr/`). Phone: tabs Home (titled KarmaHR, with the notification bell), Employees, Leave, Payroll, More (Teams, Attendance, Reviews, Hiring, Notices, Reports, Settings, Log Out). Wide screens: a sidebar with all ten sections | All ten sections built on demo data (see "HR portal" below) |
 | Executive | The Executive portal (`lib/screens/owner/`). Phone: tabs **Overview**, **Departments**, **People**, **Money**, **More** (Activity, Settings, Log Out). Wide screens: the shared sidebar. Departments are scored on progress; the Executive can drill from company to department to branch to person | Built on a made-up 290-person company (demo data) |
 
 `portalHomeFor(role)` in `lib/screens/portal_home.dart` maps a role to its
 first screen. `confirmLogout()` in `lib/screens/logout.dart` is the one
 logout for every portal. The role picker on the login screen is **demo
-only**: once the backend exists, the role comes from the login response.
+only**: with real login the role comes from the user's profile in the
+database. The database also has a **Company Admin** role (HR's powers plus
+company settings); it gets a login on Days 6–7.
 
 ### Executive portal
 
@@ -183,14 +188,15 @@ Overview and Activity are the HR portal's real, live data.
 
 ### HR portal
 
-Nine sections; the same screens serve a phone (bottom tabs; More holds
-Attendance, Reviews, Hiring, Notices and Reports) and a wide window
+Ten sections; the same screens serve a phone (bottom tabs; More holds
+Teams, Attendance, Reviews, Hiring, Notices and Reports) and a wide window
 (sidebar).
 
 | Section | What HR can do |
 |---|---|
 | Overview | See what needs action (requests to review, documents expiring, payroll not yet approved), headcount, upcoming birthdays and anniversaries, who's out |
 | Employees | Search and filter; a **list** or an **org chart**; open a record (Job, Contact, Pay, Docs, Tasks tabs); add, edit, deactivate; **import many from CSV**; make appointment, experience and salary-certificate **PDF letters**; keep each person's **documents** with expiry dates; tick **onboarding and offboarding** checklists |
+| Teams | Make a team, add members and pick one member as the **team head**, who will assign the team's tasks. A person can lead only one team; a removed or deactivated head leaves the team with "No head yet". Every change is in the audit log |
 | Leave & Holidays | **Approvals** inbox for leave, expense, overtime and HR requests; read-only leave **Policy**; company **Holidays** next to the public holidays |
 | Payroll | Pick a BS month, run it with the Nepal tax and SSF rules, approve (freezes the figures), mark paid. Export the **register, bank transfer file, TDS report and SSF report** as CSV, and share each person's **payslip as a PDF** |
 | Attendance | Who came, was late, was absent or on leave, for any of the last 14 days; Saturday shows as the weekly holiday |
@@ -199,8 +205,8 @@ Attendance, Reviews, Hiring, Notices and Reports) and a wide window
 | Notices | Write, publish and delete company notices; employees see them at once |
 | Reports | Headcount by department and type, request counts, latest payroll, documents expiring soon, CSV exports, and the **audit log** (filter by kind, export) |
 
-**Company data vs your own data.** Employee records, documents, checklists,
-the approvals inbox, payroll, reviews, hiring, notices, company holidays and
+**Company data vs your own data.** Employee records, teams, documents,
+checklists, the approvals inbox, payroll, reviews, hiring, notices, company holidays and
 the audit log belong to the company, not to whoever is signed in, so logout
 does **not** reset them (your own leave, expenses and so on still reset).
 That is why an employee HR adds shows in the employee Directory, and a
@@ -216,6 +222,107 @@ Review ratings and comments (the employee's and manager's part) are not
 built; HR only tracks the steps. PDF letters are unsigned drafts, and the
 employer SSF share (20%), tax, SSF and leave numbers are unverified
 placeholders (see "Nepal domain layer").
+
+### Backend (Supabase)
+
+The app is moving onto [Supabase](https://supabase.com) (Postgres, login,
+file storage, server functions), one area at a time.
+
+**Keys.** `lib/config/env.dart` reads the project URL and the
+**publishable** key at build time from a local `.env` file (git-ignored;
+copy `.env.example`). Without `.env` the app runs on its demo data exactly
+as before, which is how the tests and CI run. Never put the **secret** key
+in the app, in git or in chat: it bypasses every security rule.
+
+**Migrations** (`supabase/migrations/`, run in file-name order):
+
+| File | What it does |
+|---|---|
+| `…_schema_v1.sql` | 8 tables: companies, roles (built-in Company Admin, HR, Executive, Employee), branches, departments, employees, profiles (one per login), teams, team_members |
+| `…_row_level_security.sql` | Who may see and change what (below) |
+
+**Tenant isolation.** Every company-owned row has `company_id`, and every
+link between two rows includes it, so the database itself refuses to put an
+employee in another company's department or team.
+
+**Row Level Security.** The database filters every query by the signed-in
+user's own profile, never by anything the app sends:
+
+| Who | Can read | Can change |
+|---|---|---|
+| Logged out | Nothing | Nothing |
+| Employee | Own full record; own company's departments, branches and teams; a colleague directory (`company_directory()`) **without pay or bank details** | Nothing yet |
+| Executive | Everything in own company | Nothing |
+| HR, Company Admin | Everything in own company | Employees, departments, branches, teams (Company Admin can also rename the company) |
+| Everyone | Never another company's rows | Never their own role or company |
+
+**Employees on Supabase.** `EmployeeRecordsState` is still the one place
+screens read employees from. Underneath it, an `EmployeeRepository` loads and
+saves: `SupabaseEmployeeRepository` with a real login, `DemoEmployeeRepository`
+(keeping the built-in demo people) without one. A save goes to the database
+first, and the screen's list changes only if it worked, so what HR sees is
+what is stored. The list loads after sign-in and whenever the Employees screen
+opens (or its refresh button is tapped), so a person added on another device
+appears there; there is no live push yet. Everyone sees colleagues through
+`company_directory()` (no pay); the database gives full records, with pay,
+only to HR, Company Admin and Executive. Logging out empties the list, so
+the next person (possibly from another company) never sees it.
+
+**Departments, branches and teams on Supabase.** HR picks an employee's
+department and work location (branch) from the company's own lists
+(`OrgState`), and can add a new one from the same picker, which saves it as a
+real record. Teams (`TeamsState`) load and save the same way as employees:
+the database first, then the screen, and a failed save reloads what is really
+stored. Without a backend, the demo's own lists and in-memory teams are used.
+
+To apply a migration: Supabase dashboard → **SQL Editor** → paste the file →
+**Run**. Run each file once, in order.
+
+**Test data** (`supabase/seed/`) — for a development project only, never one
+with real people:
+
+| File | What it does |
+|---|---|
+| `dev_seed.sql` | Two companies (Himalaya Tech, Everest Traders) with branches, departments, people, a team, and **eight logins**: Company Admin, HR, Executive and three Employees for Himalaya, HR and an Employee for Everest. Set the password on the line marked `CHANGE-ME`, then run it in the SQL Editor. Safe to run again. |
+| `dev_seed_remove.sql` | Removes everything the seed made, and nothing else |
+| `live_check.mjs` | Signs in to the real project as each seeded login and checks what each can and cannot see: `SEED_PASSWORD='…' node supabase/seed/live_check.mjs` |
+
+Logins look like `hr@himalaya-tech.test`, `sita@himalaya-tech.test`,
+`mina@everest-traders.test`. Never commit the password you choose.
+
+### Invites, activation and passwords
+
+How an employee gets a login, with no server code and no secret key:
+
+1. **HR invites** (employee detail → *Sign-in account* → *Invite to sign in*).
+   This saves one row in `invites` with the employee's work email.
+2. **The employee activates**: login screen → *First time here? Activate your
+   account*. They enter the invited email and choose a password; Supabase
+   emails a code (6 or 8 digits, set in Supabase); they type it in.
+3. **The database links them**: when the email becomes confirmed, a trigger
+   (`private.accept_invite`) finds the invite for that email and creates
+   their profile (company, employee role, employee record). No invite means a
+   login with no profile, which sees nothing.
+
+*Forgot password* (login screen) and *Change password* (Settings → Account)
+use the same codes, so no deep links or web page are needed.
+
+One-time setup in the Supabase dashboard (the app cannot do this for you):
+
+- **Authentication → Providers → Email**: keep *Confirm email* **ON**. The
+  invite is only honoured once the email is confirmed; turning this off would
+  let anyone who knows an invited address claim it.
+- **Authentication → Email Templates**: in *Confirm signup* and *Reset
+  Password*, add the code, for example `Your KarmaHR code: {{ .Token }}`.
+  The default templates only contain a link.
+- **Email sending**: Supabase's built-in sender only emails people in your
+  Supabase organisation, and is rate-limited (a few emails an hour). To email
+  real employees, add your own SMTP server (Project Settings → Authentication
+  → SMTP; Resend or Brevo have free plans).
+
+A deactivated employee is locked out by the database itself (the
+`20261012000000` migration): every security rule treats them as nobody, and
+the app shows a clear message at sign-in.
 
 ### Translations (English ⇄ नेपाली)
 
@@ -274,7 +381,7 @@ then show English.
 flutter test
 ```
 
-782 tests:
+968 app tests (plus 31 live checks that run only on request), and 109 database tests (below):
 
 - **Unit** — Nepal rules (fiscal year, leave policy, tax + caps, leave
   planner, bonus, overtime), PDFs, state classes.
@@ -292,17 +399,55 @@ flutter test
   demo role opens the right portal, logout signs out, and switching to
   नेपाली changes the text.
 
-**CI:** `.github/workflows/ci.yml` runs `flutter analyze` and `flutter test`
-on GitHub Actions for every push and pull request to `development` or
-`main`. It runs with `TZ=Asia/Kathmandu` to match real devices (see the
+**Live checks** (`test/live/`) run the real repository code against your real
+Supabase project, signed in as the seeded test logins. They add, edit and
+deactivate a test employee, add departments and branches, build a team and
+read it back as if after a restart, try what each role must not be able to
+do, and remove what they made. They are skipped unless you ask for them, so normal
+runs and CI never touch the network:
+
+```bash
+SEED_PASSWORD='the seed password' flutter test test/live
+```
+
+**Database tests** (`supabase/tests/`) run every migration in an
+in-memory Postgres ([PGlite](https://pglite.dev)), so no Supabase account or
+Docker is needed:
+
+```bash
+cd supabase/tests && npm ci && npm test
+```
+
+- `schema_test.mjs` (27) — the table rules: company isolation, team rules
+  (head must be a member, one team per head), cascades, validation.
+- `seed_test.mjs` (22) — the test-data seed below: it refuses to run without
+  a password, builds two companies with a login per role, can be repeated,
+  leaves anything else alone, and the result obeys the security rules.
+- `deactivated_test.mjs` (10) — a deactivated employee reads and changes
+  nothing, even with a valid login; HR and Executive are unaffected.
+- `rls_test.mjs` (32) — signs in as people from two companies and checks
+  each one's reads and writes. The main promise: one company never sees or
+  touches another's rows. These tests were checked by deliberately adding a
+  leaky rule and confirming they fail.
+
+**CI:** `.github/workflows/ci.yml` runs `flutter analyze`, `flutter test`
+and the database tests on GitHub Actions for every push and pull request to
+`development` or `main`. It runs with `TZ=Asia/Kathmandu` to match real devices (see the
 timezone note above).
 
 ## Project structure
 
 ```
-.github/workflows/ci.yml               # analyze + tests on every push/PR
+.github/workflows/ci.yml               # analyze + app + database tests
+.env.example                           # template for your local .env (keys)
+.vscode/launch.json                    # run with Supabase, or demo data only
+supabase/
+├── migrations/                        # the database, as SQL files (in order)
+├── seed/                              # test companies + logins (dev only)
+└── tests/                             # schema, security and seed tests (PGlite)
 lib/
-├── main.dart                          # appProviders(): one provider list
+├── main.dart                          # appProviders(); connects Supabase if keys given
+├── config/env.dart                    # Supabase URL + publishable key from .env
 ├── l10n/                              # app_en.arb + app_ne.arb (+ generated)
 │   └── l10n.dart                      # context.l10n helper
 ├── data/                              # demo data (replaced by backend later)
@@ -342,7 +487,7 @@ lib/
 │   ├── document_wallet_state.dart, emergency_info_state.dart
 │   ├── safety_state.dart, event_rsvp_state.dart
 │   └── (company data, never reset on logout) employee_records_state,
-│       employee_documents_state, checklist_state, hr_inbox_state,
+│       teams_state, employee_documents_state, checklist_state, hr_inbox_state,
 │       payroll_state, reviews_state, hiring_state, notices_state,
 │       company_holidays_state, audit_log_state
 ├── theme/
@@ -365,12 +510,13 @@ lib/
     │   ├── hr_portal_screen.dart      # wide: sidebar; phone: HrPhoneShell
     │   ├── hr_phone_shell.dart        # phone tab bar + HrSectionPage
     │   ├── hr_more_screen.dart        # HR More tab
-    │   ├── hr_section.dart            # the nine sections (enum)
+    │   ├── hr_section.dart            # the ten sections (enum)
     │   ├── hr_section_view.dart       # each section's body, one place
     │   ├── hr_nav_scope.dart          # lets Home open another section
     │   ├── hr_overview_screen.dart    # needs-your-action, headcount, events
     │   ├── hr_employees_screen.dart   # list, search, filter
     │   ├── hr_employee_detail_screen.dart / hr_employee_form_screen.dart
+    │   ├── hr_teams_screen.dart       # teams, members, team head
     │   ├── hr_leave_screen.dart       # Approvals · Policy · Holidays tabs
     │   ├── hr_approvals_view.dart / hr_policy_view.dart / hr_holidays_view.dart
     │   ├── hr_payroll_screen.dart     # run, approve, mark paid, CSV
@@ -411,21 +557,23 @@ test/
 
 ## Roadmap / what's next
 
-Done: the employee portal and all nine HR sections (frontend, demo data).
-The Manager role is **postponed**: HR approves everything for now.
+A 45-day build plan (8 Oct to 21 Nov 2026) takes KarmaHR from a frontend demo
+to a real product, one item per day, with Saturdays as buffer days. The full
+day-by-day plan with status is in the **KarmaHR 45-Day Build Plan** doc.
 
-1. **Design polish pass** — one card style, one heading style, consistent
-   spacing across all screens.
-2. Translate the older employee screens to Nepali.
-3. Have a Nepali HR professional and a CA verify the placeholder leave,
-   tax, SSF, overtime and bonus rules (`NOTE(hr-review)` /
-   `NOTE(finance-review)`), then make tax slabs and holidays HR-editable.
-4. **Backend** (Supabase recommended): real login with the role from the
-   server, the shared tables behind the company data above, file storage,
-   push notifications, and server-side payroll.
-5. AI features — HR assistant, receipt scanning, smart request filling.
-6. Optional/floating holidays and multi-day Dashain/Tihar in the holiday
-   calendar.
+| Week | Dates | Focus | Status |
+|---|---|---|---|
+| 1 | 8–17 Oct | Teams, Executive rename, Supabase, schema, security rules, real login, employees and org on Supabase | Days 1–9 done |
+| 2 | 18–25 Oct | Audit log, attendance, leave with team-head then HR approval, live notifications | |
+| 3 | 26 Oct–2 Nov | My Team for team heads, real tasks, payroll on Supabase, two-person approval for salary, documents | |
+| 4 | 3–6 Nov | Simple Karma AI (permission-checked questions, insight cards, leave helper), release | |
+| 5 | 7–14 Nov | Policy Q&A, approval workflows, recruitment with CV reading, performance reviews | |
+| 6 | 15–21 Nov | Offboarding, assets, loans, travel, timesheets, AI checks, basic Platform Admin, final release | |
+
+**Not in the plan** (code alone can't finish them): Nepal tax, SSF and
+labour rules checked by an accountant; SSO, bank and biometric integrations;
+predictive analytics (needs months of real data); payment billing (needs a
+merchant account).
 
 ## Getting started
 
@@ -433,13 +581,25 @@ The Manager role is **postponed**: HR approves everything for now.
 git clone https://github.com/Bishwassigdel/karmahr.git
 cd karmahr
 flutter pub get
-flutter run
+flutter run                                   # demo data, no keys needed
 ```
 
-Requires Xcode (or Android Studio) set up locally.
+To use Supabase, copy `.env.example` to `.env`, fill in your project URL and
+publishable key (Supabase → Project Settings → API Keys), then run:
+
+```bash
+flutter run --dart-define-from-file=.env
+```
+
+or pick **KarmaHR (Supabase)** in VS Code's Run menu.
+
+Requires Xcode (or Android Studio) set up locally; the database tests need
+Node.js.
 
 ## Git workflow
 
+- **`month-1`** — the 45-day plan's work happens here; it goes to
+  `development` by pull request on buffer days.
 - **`development`** — day-to-day work. Commit and push here:
   ```bash
   git add .

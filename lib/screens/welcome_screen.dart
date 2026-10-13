@@ -1,7 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 import 'login_screen.dart';
+import 'portal_home.dart';
+import '../state/auth_repository.dart';
+import '../state/auth_state.dart';
+import '../state/session.dart';
 import '../theme/app_colors.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -32,6 +37,23 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       begin: const Offset(0, 0.15),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
+    // "Stay signed in": after the first frame, skip this screen if the
+    // person already has a saved session.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreSession());
+  }
+
+  Future<void> _restoreSession() async {
+    final repo = context.read<AuthRepository>();
+    if (!repo.usesBackend) return; // the demo has no saved sessions
+    final user = await repo.restoreSession();
+    if (user == null || !mounted) return;
+    context.read<AuthState>().signInAs(user);
+    startSession(context);
+    Navigator.pushReplacement(
+      context,
+      CupertinoPageRoute(builder: (_) => portalHomeFor(user.role)),
+    );
   }
 
   @override

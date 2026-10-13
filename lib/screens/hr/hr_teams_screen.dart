@@ -4,14 +4,29 @@ import 'package:provider/provider.dart';
 import '../../l10n/l10n.dart';
 import '../../state/audit_log_state.dart';
 import '../../state/employee_records_state.dart';
+import '../../state/employee_repository.dart' show SaveFailure, SaveProblem;
 import '../../state/teams_state.dart';
 import '../../theme/app_colors.dart';
 import '../apps/widgets/status_badge.dart';
 import '../apps/widgets/ui_kit.dart';
 
 /// HR > Teams: make teams, choose who is in them and who leads each one.
-class HrTeamsScreen extends StatelessWidget {
+class HrTeamsScreen extends StatefulWidget {
   const HrTeamsScreen({super.key});
+
+  @override
+  State<HrTeamsScreen> createState() => _HrTeamsScreenState();
+}
+
+class _HrTeamsScreenState extends State<HrTeamsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Pick up changes made on another device since this was last open.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<TeamsState>().refresh();
+    });
+  }
 
   /// The head's name, or null when the team has none or its head has been
   /// deactivated (someone who has left can't lead a team).
@@ -25,16 +40,13 @@ class HrTeamsScreen extends StatelessWidget {
     final l10n = context.l10n;
     final name = await _askName(context, title: l10n.hrNewTeam);
     if (name == null || !context.mounted) return;
-    final team = context.read<TeamsState>().create(name);
-    if (team == null) {
-      await showMessage(
-        context,
-        title: l10n.hrCheckDetails,
-        message: l10n.hrTeamNameProblem,
-      );
+    final failure = await context.read<TeamsState>().createAndSave(name);
+    if (!context.mounted) return;
+    if (failure != null) {
+      await _tellFailure(context, failure);
       return;
     }
-    logAudit(context, AuditAction.teamCreated, team.name);
+    logAudit(context, AuditAction.teamCreated, name.trim());
   }
 
   @override
@@ -42,6 +54,7 @@ class HrTeamsScreen extends StatelessWidget {
     final l10n = context.l10n;
     final subtle = CupertinoColors.systemGrey.resolveFrom(context);
     final teams = context.watch<TeamsState>().teams;
+    final loadFailed = context.watch<TeamsState>().loadFailed;
     final records = context.watch<EmployeeRecordsState>();
 
     return Align(
@@ -58,6 +71,15 @@ class HrTeamsScreen extends StatelessWidget {
                 child: Text(l10n.hrNewTeam),
               ),
             ),
+            if (loadFailed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                child: Text(
+                  l10n.hrErrSaveNetwork,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: CupertinoColors.destructiveRed),
+                ),
+              ),
             if (teams.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 0),
@@ -115,15 +137,13 @@ class HrTeamDetailScreen extends StatelessWidget {
       initial: team.name,
     );
     if (name == null || !context.mounted) return;
-    if (context.read<TeamsState>().rename(team.id, name)) {
-      logAudit(context, AuditAction.teamUpdated, name);
-    } else {
-      await showMessage(
-        context,
-        title: l10n.hrCheckDetails,
-        message: l10n.hrTeamNameProblem,
-      );
-    }
+    final failure = await context.read<TeamsState>().renameAndSave(
+      team.id,
+      name,
+    );
+    if (!context.mounted) return;
+    if (failure != null) return _tellFailure(context, failure);
+    logAudit(context, AuditAction.teamUpdated, name.trim());
   }
 
   Future<void> _addMember(BuildContext context, Team team) async {
@@ -146,9 +166,13 @@ class HrTeamDetailScreen extends StatelessWidget {
       label: (r) => r.name,
     );
     if (picked == null || !context.mounted) return;
-    if (context.read<TeamsState>().addMember(team.id, picked.id)) {
-      logAudit(context, AuditAction.teamUpdated, team.name);
-    }
+    final failure = await context.read<TeamsState>().addMemberAndSave(
+      team.id,
+      picked.id,
+    );
+    if (!context.mounted) return;
+    if (failure != null) return _tellFailure(context, failure);
+    logAudit(context, AuditAction.teamUpdated, team.name);
   }
 
   Future<void> _memberActions(
@@ -182,27 +206,24 @@ class HrTeamDetailScreen extends StatelessWidget {
     );
     if (action == null || !context.mounted) return;
 
-    switch (action) {
-      case 'head':
-        if (teams.setHead(team.id, person.id)) {
-          logAudit(context, AuditAction.teamUpdated, team.name);
-        } else {
-          // A person can lead only one team.
-          final leads = teams.teamHeadedBy(person.id);
-          await showMessage(
-            context,
-            title: l10n.hrMakeHead,
-            message: l10n.hrHeadElsewhere(person.name, leads?.name ?? ''),
-          );
-        }
-      case 'clear':
-        teams.clearHead(team.id);
-        logAudit(context, AuditAction.teamUpdated, team.name);
-      case 'remove':
-        if (teams.removeMember(team.id, person.id)) {
-          logAudit(context, AuditAction.teamUpdated, team.name);
-        }
+    // A person can lead only one team: say so by name, before trying.
+    final leads = teams.teamHeadedBy(person.id);
+    if (action == 'head' && leads != null && leads.id != team.id) {
+      await showMessage(
+        context,
+        title: l10n.hrMakeHead,
+        message: l10n.hrHeadElsewhere(person.name, leads.name),
+      );
+      return;
     }
+    final failure = await switch (action) {
+      'head' => teams.setHeadAndSave(team.id, person.id),
+      'clear' => teams.clearHeadAndSave(team.id),
+      _ => teams.removeMemberAndSave(team.id, person.id),
+    };
+    if (!context.mounted) return;
+    if (failure != null) return _tellFailure(context, failure);
+    logAudit(context, AuditAction.teamUpdated, team.name);
   }
 
   Future<void> _delete(BuildContext context, Team team) async {
@@ -215,7 +236,9 @@ class HrTeamDetailScreen extends StatelessWidget {
       destructive: true,
     );
     if (!yes || !context.mounted) return;
-    context.read<TeamsState>().delete(team.id);
+    final failure = await context.read<TeamsState>().deleteAndSave(team.id);
+    if (!context.mounted) return;
+    if (failure != null) return _tellFailure(context, failure);
     logAudit(context, AuditAction.teamDeleted, team.name);
     Navigator.pop(context);
   }
@@ -337,6 +360,20 @@ class HrTeamDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Tells the person why a team change didn't save.
+Future<void> _tellFailure(BuildContext context, SaveFailure failure) {
+  final l10n = context.l10n;
+  return showMessage(
+    context,
+    title: failure.problem == SaveProblem.duplicateName
+        ? l10n.hrCheckDetails
+        : l10n.hrSaveFailedTitle,
+    message: failure.problem == SaveProblem.duplicateName
+        ? l10n.hrTeamNameProblem
+        : failure.problem.label(l10n),
+  );
 }
 
 /// Asks for a team name. Returns null if cancelled. Owns its controller so

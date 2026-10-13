@@ -5,8 +5,9 @@
 // could state a different salary than the payslips it's meant to back
 // up, which is exactly the kind of mismatch a bank checks for.
 //
-// Frontend-only: no login/session exists yet, so this is fixed demo
-// data. With a backend it becomes whatever the auth/profile API returns.
+// [currentEmployee] is the demo person until someone signs in for real; then
+// it is that person's own record from the database (see AuthState.signInAs),
+// and it goes back to the demo person on logout.
 
 class EmployeeProfile {
   final String name;
@@ -39,11 +40,27 @@ class EmployeeProfile {
     required this.transportAllowance,
   });
 
+  /// Just a name, for a signed-in person whose employee record we couldn't
+  /// load (or who has none, like a Company Admin). Everything else is blank
+  /// or zero, so nothing from the demo person leaks onto their screens.
+  EmployeeProfile.nameOnly(this.name)
+    : employeeId = '',
+      jobTitle = '',
+      department = '',
+      manager = '',
+      joiningDate = DateTime.now(),
+      employmentType = '',
+      workLocation = '',
+      email = '',
+      basicSalary = 0,
+      dearnessAllowance = 0,
+      transportAllowance = 0;
+
   double get allowances => dearnessAllowance + transportAllowance;
   double get grossMonthly => basicSalary + allowances;
 }
 
-final currentEmployee = EmployeeProfile(
+final demoEmployee = EmployeeProfile(
   name: 'Bishwas Sigdel',
   employeeId: 'MB-24071',
   jobTitle: 'HR Associate',
@@ -57,6 +74,13 @@ final currentEmployee = EmployeeProfile(
   dearnessAllowance: 4500,
   transportAllowance: 3000,
 );
+
+/// Whose screens these are. Read it when a screen is built.
+EmployeeProfile currentEmployee = demoEmployee;
+
+void setCurrentEmployee(EmployeeProfile person) => currentEmployee = person;
+
+void resetCurrentEmployee() => currentEmployee = demoEmployee;
 
 /// "Rs. 45,000" — shared by the payslip screen and both PDFs so on-screen
 /// and printed figures are always formatted identically.

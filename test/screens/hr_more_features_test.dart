@@ -368,8 +368,9 @@ void main() {
           .toList();
       expect(fields[0], 'Pooja Thapa'); // name
       expect(fields[1], 'Office Assistant'); // job title
-      expect(fields[2], 'Operations'); // department
-      expect(fields[4], 'pooja.thapa@example.com'); // email
+      expect(fields[2], 'pooja.thapa@example.com'); // email
+      // The department is picked from the company's list, already chosen.
+      expect(find.text('Operations'), findsOneWidget);
     });
 
     testWidgets('reaching "hired" is logged', (tester) async {

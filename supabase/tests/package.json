@@ -1,0 +1,11 @@
+{
+  "name": "karmahr-db-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node schema_test.mjs && node rls_test.mjs && node seed_test.mjs && node deactivated_test.mjs && node invites_test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
+  }
+}
