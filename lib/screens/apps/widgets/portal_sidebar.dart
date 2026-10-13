@@ -14,7 +14,7 @@ class PortalSidebarItem {
 
 /// The permanent left sidebar of a portal on a wide screen: the logo, one
 /// entry per section, then Settings and Log Out at the bottom. Shared by
-/// the HR and CEO portals.
+/// the HR and Executive portals.
 class PortalSidebar extends StatelessWidget {
   final List<PortalSidebarItem> items;
   final int selected;

@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "KarmaHR (Supabase)",
+      "request": "launch",
+      "type": "dart",
+      "toolArgs": ["--dart-define-from-file=.env"]
+    },
+    {
+      "name": "KarmaHR (demo data only)",
+      "request": "launch",
+      "type": "dart"
+    }
+  ]
+}

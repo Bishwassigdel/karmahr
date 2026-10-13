@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+import '../data/current_employee.dart';
+import 'auth_repository.dart' show AppUser;
+
 /// Who is signed in, which decides the portal they see:
 ///   - employee: the employee app
 ///   - manager: the employee app plus a Team tab
@@ -17,14 +20,33 @@ class AuthState extends ChangeNotifier {
   UserRole? get role => _role;
   bool get isSignedIn => _role != null;
 
+  // Who signed in, when it was a real login (null for the demo picker).
+  AppUser? _user;
+  AppUser? get user => _user;
+
+  /// Demo sign-in: just picks a role.
   void signIn(UserRole role) {
     _role = role;
+    _user = null;
+    resetCurrentEmployee(); // the demo person
+    notifyListeners();
+  }
+
+  /// Real sign-in: the role comes from the person's profile.
+  void signInAs(AppUser user) {
+    _role = user.role;
+    _user = user;
+    // The employee screens show this person's own record, never the demo
+    // person's (a Company Admin may have no record: just their name).
+    setCurrentEmployee(user.profile ?? EmployeeProfile.nameOnly(user.name));
     notifyListeners();
   }
 
   void signOut() {
     if (_role == null) return;
     _role = null;
+    _user = null;
+    resetCurrentEmployee();
     notifyListeners();
   }
 }

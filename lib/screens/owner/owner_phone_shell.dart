@@ -12,7 +12,7 @@ import 'owner_nav_scope.dart';
 import 'owner_section.dart';
 import 'owner_section_view.dart';
 
-/// The CEO portal on a phone: Overview, Departments, People, Money, and a
+/// The Executive portal on a phone: Overview, Departments, People, Money, and a
 /// More tab with Activity, Settings and Log Out.
 class OwnerPhoneShell extends StatefulWidget {
   const OwnerPhoneShell({super.key});
@@ -102,7 +102,7 @@ class _OwnerPhoneShellState extends State<OwnerPhoneShell> {
   }
 }
 
-/// One CEO section as a phone page. The home page carries the logo, the
+/// One Executive section as a phone page. The home page carries the logo, the
 /// KarmaHR name and the bell, like the other portals' Home.
 class OwnerSectionPage extends StatelessWidget {
   final OwnerSection section;

@@ -905,7 +905,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hrAuditEmployeesImported => 'Employees imported';
 
   @override
-  String get roleOwner => 'CEO';
+  String get roleOwner => 'Executive';
 
   @override
   String get ownerSecOverview => 'Overview';
@@ -1648,4 +1648,297 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hrNoNewJoiners => 'Nobody has joined in the last 30 days.';
+
+  @override
+  String get hrSectionTeams => 'Teams';
+
+  @override
+  String get hrNewTeam => 'New team';
+
+  @override
+  String get hrTeamName => 'Team name';
+
+  @override
+  String get hrTeamNameProblem => 'Enter a team name that no other team uses.';
+
+  @override
+  String get hrTeamsEmpty =>
+      'No teams yet. Make one, add people, and choose who leads it.';
+
+  @override
+  String hrTeamMemberCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get hrNoHead => 'No head yet';
+
+  @override
+  String get hrTeamHead => 'Team head';
+
+  @override
+  String get hrRenameTeam => 'Rename';
+
+  @override
+  String get hrAddMember => 'Add a member';
+
+  @override
+  String get hrNoOneToAdd => 'Everyone is already in this team.';
+
+  @override
+  String get hrMakeHead => 'Make team head';
+
+  @override
+  String get hrRemoveHead => 'Remove as head';
+
+  @override
+  String get hrRemoveFromTeam => 'Remove from team';
+
+  @override
+  String hrHeadElsewhere(String name, String team) {
+    return '$name already leads $team. A person can lead only one team.';
+  }
+
+  @override
+  String get hrDeleteTeam => 'Delete team';
+
+  @override
+  String hrDeleteTeamTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get hrDeleteTeamBody =>
+      'The team is removed. The people in it are not affected.';
+
+  @override
+  String get hrTeamHint =>
+      'Tap a person to make them head or remove them. The head can give tasks to the other members.';
+
+  @override
+  String get hrTeamNeedsHead =>
+      'This team has no head yet, so nobody can assign its members tasks.';
+
+  @override
+  String get hrAuditTeamCreated => 'Team created';
+
+  @override
+  String get hrAuditTeamUpdated => 'Team changed';
+
+  @override
+  String get hrAuditTeamDeleted => 'Team deleted';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get emailHint => 'you@company.com';
+
+  @override
+  String get loginErrEmpty => 'Enter your email and password.';
+
+  @override
+  String get loginErrWrong => 'Wrong email or password.';
+
+  @override
+  String get loginErrNoProfile =>
+      'Your account isn\'t set up yet. Ask your company admin.';
+
+  @override
+  String get loginErrDeactivated =>
+      'Your account has been deactivated. Ask your company\'s HR if this is a mistake.';
+
+  @override
+  String get loginErrNetwork =>
+      'Couldn\'t sign in. Check your internet and try again.';
+
+  @override
+  String get hrSaveFailedTitle => 'Couldn\'t save';
+
+  @override
+  String get hrErrDuplicateStaffId =>
+      'That Staff ID has just been taken by someone else. Check it and save again.';
+
+  @override
+  String get hrErrDuplicateEmail =>
+      'Another employee already has that email address.';
+
+  @override
+  String get hrErrNotAllowed => 'You don\'t have permission to do that.';
+
+  @override
+  String get hrErrSaveNetwork =>
+      'Couldn\'t reach the server. Check your internet and try again.';
+
+  @override
+  String get hrRefresh => 'Refresh';
+
+  @override
+  String get hrLoadFailed =>
+      'Couldn\'t load the employees. Tap refresh to try again.';
+
+  @override
+  String get hrErrDuplicateName => 'That name is already used. Choose another.';
+
+  @override
+  String get hrErrConflict =>
+      'Someone changed this at the same time. It has been reloaded: check it and try again.';
+
+  @override
+  String get hrPickDepartment => 'Choose a department';
+
+  @override
+  String get hrPickBranch => 'Choose a branch';
+
+  @override
+  String get hrNewDepartment => 'New department…';
+
+  @override
+  String get hrNewBranch => 'New branch…';
+
+  @override
+  String get hrDepartmentName => 'Department name';
+
+  @override
+  String get hrBranchName => 'Branch name';
+
+  @override
+  String get hrNotChosen => 'Choose';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get activateLink => 'First time here? Activate your account';
+
+  @override
+  String get activateTitle => 'Activate your account';
+
+  @override
+  String get activateIntro =>
+      'Use the work email your HR invited, and choose a password. We\'ll email you a code.';
+
+  @override
+  String get activateSendCode => 'Send code';
+
+  @override
+  String codeSentTo(String email) {
+    return 'We sent a code to $email. Enter it below.';
+  }
+
+  @override
+  String get codeLabel => 'Code from the email';
+
+  @override
+  String get activateAction => 'Activate';
+
+  @override
+  String get resendCode => 'Send a new code';
+
+  @override
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String get confirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get currentPasswordLabel => 'Current password';
+
+  @override
+  String get passwordHelp => 'At least 8 characters.';
+
+  @override
+  String get authErrEmail => 'Enter a valid email address.';
+
+  @override
+  String get authErrCode =>
+      'That code is wrong or has expired. Check it, or ask for a new one.';
+
+  @override
+  String get authErrWeak => 'That password is too weak. Try a longer one.';
+
+  @override
+  String get authErrCurrent => 'Your current password isn\'t right.';
+
+  @override
+  String get pwErrShort => 'Use at least 8 characters.';
+
+  @override
+  String get pwErrMismatch => 'The two passwords don\'t match.';
+
+  @override
+  String get pwErrSame => 'Choose a password different from your current one.';
+
+  @override
+  String get forgotTitle => 'Reset your password';
+
+  @override
+  String get forgotIntro =>
+      'Enter your email. We\'ll send a code to reset your password.';
+
+  @override
+  String get forgotAction => 'Reset password';
+
+  @override
+  String get passwordResetTitle => 'Password changed';
+
+  @override
+  String get passwordResetBody => 'Sign in with your new password.';
+
+  @override
+  String get accountHeader => 'Account';
+
+  @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get changePasswordAction => 'Change password';
+
+  @override
+  String get changePasswordDone => 'Your password was changed.';
+
+  @override
+  String get hrAccountHeader => 'Sign-in account';
+
+  @override
+  String get hrAccountNone => 'No login yet';
+
+  @override
+  String hrAccountInvited(String email) {
+    return 'Invited at $email. Waiting for them to activate.';
+  }
+
+  @override
+  String get hrAccountActive => 'Has a login';
+
+  @override
+  String get hrInviteAction => 'Invite to sign in';
+
+  @override
+  String get hrInviteChange => 'Change invite';
+
+  @override
+  String get hrInviteCancel => 'Cancel invite';
+
+  @override
+  String hrInviteTitle(String name) {
+    return 'Invite $name?';
+  }
+
+  @override
+  String hrInviteMessage(String email) {
+    return '$email will be allowed to activate an account. Ask them to open KarmaHR and tap “First time here? Activate your account”.';
+  }
+
+  @override
+  String get hrInviteNeedsEmail => 'Add a work email to this employee first.';
+
+  @override
+  String get hrInviteSend => 'Invite';
 }

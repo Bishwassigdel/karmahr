@@ -28,6 +28,15 @@ class _HrEmployeesScreenState extends State<HrEmployeesScreen> {
   // Org chart instead of the list.
   var _orgChart = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // Pick up anyone another device added since this screen was last open.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<EmployeeRecordsState>().refresh();
+    });
+  }
+
   List<EmployeeRecord> _visible(List<EmployeeRecord> all) {
     final q = _query.trim().toLowerCase();
     return all.where((r) {
@@ -66,7 +75,19 @@ class _HrEmployeesScreenState extends State<HrEmployeesScreen> {
       return;
     }
 
-    final result = context.read<EmployeeRecordsState>().importCsv(text);
+    final saved = await context.read<EmployeeRecordsState>().importCsvAndSave(
+      text,
+    );
+    if (!mounted) return;
+    final result = saved.result;
+    if (saved.failure != null) {
+      await showMessage(
+        context,
+        title: l10n.hrSaveFailedTitle,
+        message: saved.failure!.problem.label(l10n),
+      );
+      return;
+    }
     if (result.added > 0) {
       logAudit(
         context,
@@ -126,6 +147,18 @@ class _HrEmployeesScreenState extends State<HrEmployeesScreen> {
                   CupertinoButton(
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     minimumSize: Size.zero,
+                    onPressed: () =>
+                        context.read<EmployeeRecordsState>().refresh(),
+                    child: context.watch<EmployeeRecordsState>().isLoading
+                        ? const CupertinoActivityIndicator(radius: 9)
+                        : Icon(
+                            CupertinoIcons.refresh,
+                            semanticLabel: l10n.hrRefresh,
+                          ),
+                  ),
+                  CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    minimumSize: Size.zero,
                     onPressed: () => setState(() => _orgChart = !_orgChart),
                     child: Icon(
                       _orgChart
@@ -157,6 +190,17 @@ class _HrEmployeesScreenState extends State<HrEmployeesScreen> {
                 ],
               ),
             ),
+            if (context.watch<EmployeeRecordsState>().loadFailed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                child: Text(
+                  l10n.hrLoadFailed,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: CupertinoColors.destructiveRed,
+                  ),
+                ),
+              ),
             if (_orgChart)
               Expanded(
                 child: _OrgChartView(

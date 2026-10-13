@@ -18,6 +18,8 @@ import 'package:my_first_flutter_app/state/employee_records_state.dart';
 import 'package:my_first_flutter_app/state/hr_inbox_state.dart';
 import 'package:my_first_flutter_app/state/payroll_state.dart';
 
+import '../helpers/employee_form.dart';
+
 Future<void> pump(
   WidgetTester tester,
   Widget screen, {
@@ -197,17 +199,14 @@ void main() {
       await tester.tap(find.byIcon(CupertinoIcons.person_add));
       await tester.pumpAndSettle();
 
-      final fields = find.byType(CupertinoTextFormFieldRow);
-      for (final (i, v) in [
-        (0, 'Nima Sherpa'),
-        (1, 'Designer'),
-        (2, 'Product'),
-        (4, 'nima@karmahr.com'),
-        (5, '9841234567'),
-        (6, '50000'),
-      ]) {
-        await tester.enterText(fields.at(i), v);
-      }
+      await fillForm(tester, {
+        EmployeeField.name: 'Nima Sherpa',
+        EmployeeField.jobTitle: 'Designer',
+        EmployeeField.email: 'nima@karmahr.com',
+        EmployeeField.phone: '9841234567',
+        EmployeeField.basic: '50000',
+      });
+      await pickInForm(tester, 'Department', 'Finance');
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 

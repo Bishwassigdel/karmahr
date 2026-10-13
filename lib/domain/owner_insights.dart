@@ -1,9 +1,10 @@
-// What the CEO should look at first, worked out from the company's numbers.
+// What an executive should look at first, worked out from the company's
+// numbers.
 // Pure Dart, so the rules can be tested without any screen.
 
 import '../data/company_demo.dart';
 
-/// A group smaller than this is never broken down on its own in the CEO
+/// A group smaller than this is never broken down on its own in the Executive
 /// portal: with 2 people in a slice, "average attendance" would be one
 /// person's attendance in disguise.
 const minGroupForStats = 5;
@@ -13,7 +14,7 @@ bool largeEnoughToShow(int headcount) => headcount >= minGroupForStats;
 
 enum AttentionKind { deptBehind, deptAttrition, deptShort, branchAttendance }
 
-/// One thing worth the CEO's attention.
+/// One thing worth the executive's attention.
 class Attention {
   final AttentionKind kind;
 

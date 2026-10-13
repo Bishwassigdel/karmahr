@@ -13,6 +13,7 @@ class HrMoreScreen extends StatelessWidget {
 
   // Sections that live here instead of in the tab bar.
   static const _sections = [
+    HrSection.teams,
     HrSection.attendance,
     HrSection.reviews,
     HrSection.hiring,

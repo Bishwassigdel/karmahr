@@ -38,3 +38,13 @@ jobs:
         run: flutter test test/domain test/state test/data
         env:
           TZ: America/New_York
+
+      # The database schema: runs every migration in an in-memory Postgres
+      # and checks its rules (company isolation, team rules, cascades).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Database schema tests
+        working-directory: supabase/tests
+        run: npm ci && npm test

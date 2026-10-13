@@ -46,3 +46,12 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Local secrets (Supabase keys). Copy .env.example to .env.
+.env
+
+# Database test tool dependencies
+node_modules/
+
+# Seed script copies with a real test password filled in (never commit)
+*.local.sql

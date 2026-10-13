@@ -97,7 +97,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(NotificationBell), findsOneWidget);
-      expect(find.text('Signed in as CEO'), findsOneWidget);
+      expect(find.text('Signed in as Executive'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

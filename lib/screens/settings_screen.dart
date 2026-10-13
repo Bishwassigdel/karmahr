@@ -2,7 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import 'account/change_password_screen.dart';
 import '../state/app_lock_state.dart';
+import '../state/auth_repository.dart';
+import '../state/auth_state.dart';
 import '../state/locale_state.dart';
 import '../state/notification_state.dart';
 import '../state/push_notification_state.dart';
@@ -160,8 +163,7 @@ class SettingsScreen extends StatelessWidget {
                           color: CupertinoColors.activeGreen,
                         )
                       : null,
-                  onTap: () =>
-                      context.read<LocaleState>().setLanguage(option),
+                  onTap: () => context.read<LocaleState>().setLanguage(option),
                 );
               }).toList(),
             ),
@@ -184,6 +186,24 @@ class SettingsScreen extends StatelessWidget {
                 );
               }).toList(),
             ),
+            if (context.read<AuthRepository>().usesBackend &&
+                context.read<AuthState>().user != null)
+              CupertinoListSection.insetGrouped(
+                header: Text(l10n.accountHeader),
+                children: [
+                  CupertinoListTile(
+                    leading: const Icon(CupertinoIcons.padlock),
+                    title: Text(l10n.changePasswordTitle),
+                    trailing: const CupertinoListTileChevron(),
+                    onTap: () => Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                        builder: (_) => const ChangePasswordScreen(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             CupertinoListSection.insetGrouped(
               header: Text(l10n.securityHeader),
               footer: Text(

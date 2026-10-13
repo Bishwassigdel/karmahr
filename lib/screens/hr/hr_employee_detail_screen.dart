@@ -10,6 +10,8 @@ import '../../state/audit_log_state.dart';
 import '../../state/checklist_state.dart';
 import '../../state/employee_documents_state.dart';
 import '../../state/employee_records_state.dart';
+import '../../state/employee_repository.dart' show SaveFailure;
+import '../../state/invite_repository.dart';
 import '../../theme/app_colors.dart';
 import '../apps/widgets/pdf_actions.dart';
 import '../apps/widgets/status_badge.dart';
@@ -32,6 +34,121 @@ class HrEmployeeDetailScreen extends StatefulWidget {
 
 class _HrEmployeeDetailScreenState extends State<HrEmployeeDetailScreen> {
   _Tab _tab = _Tab.job;
+
+  // The sign-in account section: null until loaded (or when there is no
+  // backend, when the section isn't shown at all).
+  AccountInfo? _account;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAccount();
+  }
+
+  Future<void> _loadAccount() async {
+    final repo = context.read<InviteRepository>();
+    if (!repo.usesBackend) return;
+    try {
+      final info = await repo.statusOf(widget.employeeId);
+      if (mounted) setState(() => _account = info);
+    } on SaveFailure {
+      // Leave the section hidden; the rest of the page still works.
+    }
+  }
+
+  Future<void> _invite(EmployeeRecord r) async {
+    final l10n = context.l10n;
+    final repo = context.read<InviteRepository>();
+    if (r.email.trim().isEmpty) {
+      await showMessage(
+        context,
+        title: l10n.hrInviteAction,
+        message: l10n.hrInviteNeedsEmail,
+      );
+      return;
+    }
+    final ok = await confirm(
+      context,
+      title: l10n.hrInviteTitle(r.name),
+      message: l10n.hrInviteMessage(r.email.trim()),
+      confirmLabel: l10n.hrInviteSend,
+    );
+    if (!ok || !mounted) return;
+    try {
+      await repo.invite(r.id, r.email);
+    } on SaveFailure catch (f) {
+      if (!mounted) return;
+      await showMessage(
+        context,
+        title: l10n.hrSaveFailedTitle,
+        message: f.problem.label(l10n),
+      );
+      return;
+    }
+    await _loadAccount();
+  }
+
+  Future<void> _cancelInvite(EmployeeRecord r) async {
+    final l10n = context.l10n;
+    try {
+      await context.read<InviteRepository>().cancel(r.id);
+    } on SaveFailure catch (f) {
+      if (!mounted) return;
+      await showMessage(
+        context,
+        title: l10n.hrSaveFailedTitle,
+        message: f.problem.label(l10n),
+      );
+      return;
+    }
+    await _loadAccount();
+  }
+
+  /// "Sign-in account": whether this person can log in, and the invite
+  /// buttons. Hidden without a backend, and for deactivated people.
+  Widget _accountSection(EmployeeRecord r) {
+    final l10n = context.l10n;
+    final info = _account;
+    if (info == null || !r.isActive) return const SizedBox.shrink();
+    return CupertinoListSection.insetGrouped(
+      header: Text(l10n.hrAccountHeader.toUpperCase()),
+      children: [
+        CupertinoListTile(
+          leading: Icon(
+            info.status == AccountStatus.active
+                ? CupertinoIcons.check_mark_circled_solid
+                : CupertinoIcons.person_crop_circle_badge_plus,
+            color: info.status == AccountStatus.active
+                ? CupertinoColors.activeGreen
+                : CupertinoColors.systemGrey,
+          ),
+          title: Text(switch (info.status) {
+            AccountStatus.none => l10n.hrAccountNone,
+            AccountStatus.invited => l10n.hrAccountInvited(info.email),
+            AccountStatus.active => l10n.hrAccountActive,
+          }),
+        ),
+        if (info.status != AccountStatus.active)
+          CupertinoListTile(
+            title: Text(
+              info.status == AccountStatus.none
+                  ? l10n.hrInviteAction
+                  : l10n.hrInviteChange,
+              style: const TextStyle(color: AppColors.karmaRed),
+            ),
+            onTap: () => _invite(r),
+          ),
+        if (info.status == AccountStatus.invited)
+          CupertinoListTile(
+            title: Text(
+              l10n.hrInviteCancel,
+              style: const TextStyle(color: CupertinoColors.destructiveRed),
+            ),
+            onTap: () => _cancelInvite(r),
+          ),
+      ],
+    );
+  }
 
   String _tabLabel(AppLocalizations l10n, _Tab t) => switch (t) {
     _Tab.job => l10n.infoTabJob,
@@ -58,10 +175,19 @@ class _HrEmployeeDetailScreenState extends State<HrEmployeeDetailScreen> {
       destructive: deactivating,
     );
     if (!ok || !mounted) return;
-    context.read<EmployeeRecordsState>().setStatus(
+    final failure = await context.read<EmployeeRecordsState>().setStatusAndSave(
       r.id,
       deactivating ? EmploymentStatus.inactive : EmploymentStatus.active,
     );
+    if (!mounted) return;
+    if (failure != null) {
+      await showMessage(
+        context,
+        title: l10n.hrSaveFailedTitle,
+        message: failure.problem.label(l10n),
+      );
+      return;
+    }
     logAudit(
       context,
       deactivating
@@ -462,6 +588,7 @@ class _HrEmployeeDetailScreenState extends State<HrEmployeeDetailScreen> {
                   _checklist(r, l10n.hrOffboarding, offboardingItems, checks),
                 ] else
                   CupertinoListSection.insetGrouped(children: tabContent),
+                _accountSection(r),
                 CupertinoListSection.insetGrouped(
                   footer: Text(l10n.hrLettersFooter),
                   children: [

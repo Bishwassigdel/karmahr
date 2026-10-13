@@ -10,6 +10,9 @@ import 'package:my_first_flutter_app/screens/employee_directory_screen.dart';
 import 'package:my_first_flutter_app/screens/hr/hr_employee_detail_screen.dart';
 import 'package:my_first_flutter_app/screens/hr/hr_employees_screen.dart';
 import 'package:my_first_flutter_app/state/employee_records_state.dart';
+import 'package:my_first_flutter_app/state/org_state.dart';
+
+import '../helpers/employee_form.dart';
 
 Future<void> pump(
   WidgetTester tester,
@@ -178,24 +181,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(records(tester).records.length, 9);
 
-    // Field order: name, job title, department, location, email, phone,
-    // basic, dearness, transport.
-    await fill(tester, {
-      0: 'Nima Sherpa',
-      1: 'Designer',
-      2: 'Product',
-      4: 'nima.sherpa@karmahr.com',
-      5: '9841234567',
-      6: '50000',
-      7: '5000',
-      8: '3000',
+    await fillForm(tester, {
+      EmployeeField.name: 'Nima Sherpa',
+      EmployeeField.jobTitle: 'Designer',
+      EmployeeField.email: 'nima.sherpa@karmahr.com',
+      EmployeeField.phone: '9841234567',
+      EmployeeField.basic: '50000',
+      EmployeeField.dearness: '5000',
+      EmployeeField.transport: '3000',
     });
+    // A department the company doesn't have yet: added from the picker.
+    await pickInForm(tester, 'Department', 'Product');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
 
     final added = records(tester).records
         .firstWhere((r) => r.name == 'Nima Sherpa');
     expect(added.department, 'Product');
+    expect(added.workLocation, 'Kathmandu Head Office'); // the default
+    expect(
+      tester.element(find.byType(CupertinoApp)).read<OrgState>().departments,
+      contains('Product'),
+    );
     expect(added.grossMonthly, 58000);
     expect(added.isActive, isTrue);
 
@@ -212,21 +219,24 @@ void main() {
     await tester.tap(find.byIcon(CupertinoIcons.person_add));
     await tester.pumpAndSettle();
 
-    await fill(tester, {
-      0: 'Nima Sherpa',
-      1: 'Designer',
-      2: 'Product',
-      4: 'not-an-email',
-      5: '9841234567',
-      6: '50000',
+    await fillForm(tester, {
+      EmployeeField.name: 'Nima Sherpa',
+      EmployeeField.jobTitle: 'Designer',
+      EmployeeField.email: 'not-an-email',
+      EmployeeField.phone: '9841234567',
+      EmployeeField.basic: '50000',
     });
+    await pickInForm(tester, 'Department', 'Finance');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(find.text('Enter a valid email address.'), findsOneWidget);
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
-    await fill(tester, {4: 'nima@karmahr.com', 5: '12345'});
+    await fillForm(tester, {
+      EmployeeField.email: 'nima@karmahr.com',
+      EmployeeField.phone: '12345',
+    });
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
     expect(find.textContaining('10-digit mobile number'), findsOneWidget);

@@ -26,8 +26,8 @@ class KudosPreviewScreen extends StatelessWidget {
     required this.points,
   });
 
-  // The logged-in user, from the shared profile (no real login yet).
-  static final _currentUserName = currentEmployee.name;
+  // The signed-in person, read when used (it changes with each login).
+  static String get _currentUserName => currentEmployee.name;
 
   void _confirmAndPost(BuildContext context) {
     context.read<KudosState>().giveKudos(

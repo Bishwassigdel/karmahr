@@ -6,6 +6,8 @@ import '../../domain/nepal/tax_slabs.dart';
 import '../../l10n/l10n.dart';
 import '../../state/audit_log_state.dart';
 import '../../state/employee_records_state.dart';
+import '../../state/employee_repository.dart' show SaveFailure;
+import '../../state/org_state.dart';
 import '../apps/widgets/ui_kit.dart';
 
 /// Add a new employee, or edit [existing]. Shared so the two can't drift.
@@ -39,12 +41,32 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
   late final _jobTitle = TextEditingController(
     text: widget.existing?.jobTitle ?? widget.initialJobTitle,
   );
-  late final _department = TextEditingController(
-    text: widget.existing?.department ?? widget.initialDepartment,
-  );
-  late final _location = TextEditingController(
-    text: widget.existing?.workLocation ?? 'Kathmandu Head Office',
-  );
+  // Picked from the company's lists (OrgState), not typed, so the same
+  // department is never spelled two ways.
+  late String _department;
+  late String _location;
+
+  @override
+  void initState() {
+    super.initState();
+    final org = context.read<OrgState>();
+    _department = org.canonical(
+      widget.existing?.department ?? widget.initialDepartment,
+      org.departments,
+    );
+    _location = widget.existing?.workLocation ?? _defaultBranch(org);
+  }
+
+  // A new person goes to the head office if there is one, else the first
+  // branch, else nowhere yet.
+  static String _defaultBranch(OrgState org) {
+    final branches = org.branches;
+    for (final b in branches) {
+      if (b.toLowerCase().contains('head office')) return b;
+    }
+    return branches.isEmpty ? '' : branches.first;
+  }
+
   late final _email = TextEditingController(
     text: widget.existing?.email ?? widget.initialEmail,
   );
@@ -72,6 +94,9 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
 
   bool get _editing => widget.existing != null;
 
+  // True while a save is on its way, so a second tap can't save twice.
+  bool _saving = false;
+
   // 45000.0 -> "45000", null -> ""
   static String _asText(double? value) {
     if (value == null) return '';
@@ -85,8 +110,6 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
     for (final c in [
       _name,
       _jobTitle,
-      _department,
-      _location,
       _email,
       _phone,
       _basic,
@@ -100,6 +123,49 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
     super.dispose();
   }
 
+  Future<void> _pickDepartment() async {
+    final l10n = context.l10n;
+    final org = context.read<OrgState>();
+    final picked = await pickOrAdd(
+      context,
+      title: l10n.hrPickDepartment,
+      items: _withCurrent(org.departments, _department),
+      selected: _department,
+      addLabel: l10n.hrNewDepartment,
+      addPlaceholder: l10n.hrDepartmentName,
+      cancelLabel: l10n.cancel,
+      addButton: l10n.add,
+      failureTitle: l10n.hrSaveFailedTitle,
+      failureMessage: (f) => (f as SaveFailure).problem.label(l10n),
+      onAdd: org.addDepartment,
+    );
+    if (picked != null && mounted) setState(() => _department = picked);
+  }
+
+  Future<void> _pickBranch() async {
+    final l10n = context.l10n;
+    final org = context.read<OrgState>();
+    final picked = await pickOrAdd(
+      context,
+      title: l10n.hrPickBranch,
+      items: _withCurrent(org.branches, _location),
+      selected: _location,
+      addLabel: l10n.hrNewBranch,
+      addPlaceholder: l10n.hrBranchName,
+      cancelLabel: l10n.cancel,
+      addButton: l10n.add,
+      failureTitle: l10n.hrSaveFailedTitle,
+      failureMessage: (f) => (f as SaveFailure).problem.label(l10n),
+      onAdd: org.addBranch,
+    );
+    if (picked != null && mounted) setState(() => _location = picked);
+  }
+
+  // An older record may hold a name the list doesn't (yet): keep it
+  // choosable, so opening and saving the form never changes it by surprise.
+  static List<String> _withCurrent(List<String> list, String current) =>
+      current.isEmpty || list.contains(current) ? list : [...list, current];
+
   Future<void> _problem(String message) {
     return showMessage(
       context,
@@ -109,6 +175,7 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final l10n = context.l10n;
 
     final basic = parseMoney(_basic.text);
@@ -117,7 +184,7 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
     final problem = firstProblem(
       name: _name.text,
       jobTitle: _jobTitle.text,
-      department: _department.text,
+      department: _department,
       email: _email.text,
       phone: _phone.text,
       basicSalary: basic,
@@ -147,11 +214,11 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
       id: widget.existing?.id ?? state.nextId(),
       name: _name.text.trim(),
       jobTitle: _jobTitle.text.trim(),
-      department: _department.text.trim(),
+      department: _department,
       manager: _manager,
       joiningDate: _joined,
       employmentType: _type,
-      workLocation: _location.text.trim(),
+      workLocation: _location,
       email: email,
       phone: _phone.text.trim(),
       basicSalary: basic!,
@@ -162,10 +229,19 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
       bankName: _bank.text.trim(),
       accountNumber: account,
     );
-    if (_editing) {
-      state.update(record);
-    } else {
-      state.add(record);
+    // Saved first; the list on screen changes only if the save worked.
+    setState(() => _saving = true);
+    final failure = _editing
+        ? await state.updateAndSave(record)
+        : await state.addAndSave(record);
+    if (!mounted) return;
+    if (failure != null) {
+      setState(() => _saving = false);
+      return showMessage(
+        context,
+        title: l10n.hrSaveFailedTitle,
+        message: failure.problem.label(l10n),
+      );
     }
     logAudit(
       context,
@@ -208,7 +284,7 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           minimumSize: Size.zero,
-          onPressed: _save,
+          onPressed: _saving ? null : _save,
           child: Text(
             l10n.save,
             style: const TextStyle(fontWeight: FontWeight.w600),
@@ -234,7 +310,14 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
                   children: [
                     _field(l10n.hrFieldName, _name),
                     _field(l10n.jobTitleLabel, _jobTitle),
-                    _field(l10n.departmentLabel, _department),
+                    FormRow(
+                      label: l10n.departmentLabel,
+                      value: _department.isEmpty
+                          ? l10n.hrNotChosen
+                          : _department,
+                      placeholder: _department.isEmpty,
+                      onTap: _pickDepartment,
+                    ),
                     FormRow(
                       label: l10n.managerLabel,
                       value: _manager.isEmpty ? l10n.hrNoManager : _manager,
@@ -285,7 +368,12 @@ class _HrEmployeeFormScreenState extends State<HrEmployeeFormScreen> {
                         }
                       },
                     ),
-                    _field(l10n.workLocationLabel, _location),
+                    FormRow(
+                      label: l10n.workLocationLabel,
+                      value: _location.isEmpty ? l10n.hrNotChosen : _location,
+                      placeholder: _location.isEmpty,
+                      onTap: _pickBranch,
+                    ),
                   ],
                 ),
                 CupertinoListSection.insetGrouped(

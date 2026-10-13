@@ -16,7 +16,7 @@ import 'owner_people_screen.dart';
 import 'owner_section.dart';
 import 'owner_widgets.dart';
 
-/// CEO > Overview: the headline numbers, then what needs attention, then
+/// Executive > Overview: the headline numbers, then what needs attention, then
 /// how each department is doing, worst first.
 class OwnerOverviewScreen extends StatelessWidget {
   const OwnerOverviewScreen({super.key});
@@ -226,7 +226,7 @@ class _Kpi extends StatelessWidget {
   }
 }
 
-/// What needs the CEO's attention: the company's own signals first, then
+/// What needs the executive's attention: the company's own signals first, then
 /// the HR portal's live items (requests left waiting, documents, payroll).
 class _Attention extends StatelessWidget {
   final CompanyDemo company;

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
+import '../state/auth_repository.dart';
 import '../state/session.dart';
 import 'app_lock_gate.dart';
 import 'welcome_screen.dart';
@@ -21,16 +23,23 @@ void confirmLogout(BuildContext context) {
         ),
         CupertinoDialogAction(
           isDestructiveAction: true,
-          onPressed: () {
+          onPressed: () async {
+            final navigator = Navigator.of(dialogContext, rootNavigator: true);
+            final auth = dialogContext.read<AuthRepository>();
+
             // Wipe every piece of this user's data and re-lock BEFORE
             // navigating away. Providers live above the navigator, so
             // they survive pushAndRemoveUntil — see session.dart.
             resetSession(dialogContext);
 
+            // End the real login too, and wait for it: the Welcome screen
+            // checks for a saved session, and must not find the old one.
+            await auth.signOut();
+
             // AppLockGate, not a bare WelcomeScreen: pushAndRemoveUntil
             // replaces the ENTIRE stack, so re-entering any other way
             // would bypass the re-lock above.
-            Navigator.of(dialogContext, rootNavigator: true).pushAndRemoveUntil(
+            navigator.pushAndRemoveUntil(
               CupertinoPageRoute(
                 builder: (_) => const AppLockGate(child: WelcomeScreen()),
               ),

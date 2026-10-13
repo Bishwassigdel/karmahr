@@ -8,7 +8,7 @@ import '../apps/widgets/ui_kit.dart';
 import '../hr/hr_reports_screen.dart' show auditActionLabel;
 import '../notifications_screen.dart' show relativeTime;
 
-/// CEO > Activity: what is waiting on a decision, longest first, and what
+/// Executive > Activity: what is waiting on a decision, longest first, and what
 /// has been changed lately. Both come from the HR portal's live data.
 class OwnerActivityScreen extends StatelessWidget {
   const OwnerActivityScreen({super.key});

@@ -10,8 +10,8 @@ import '../apps/widgets/ui_kit.dart';
 import 'owner_people_screen.dart';
 import 'owner_widgets.dart';
 
-/// One person, as the CEO sees them: how long they have been here, how they
-/// are doing, and, only on request, their pay. Showing pay asks first and
+/// One person, as an executive sees them: how long they have been here, how
+/// they are doing, and, only on request, their pay. Showing pay asks first and
 /// is written to the audit log.
 class OwnerPersonScreen extends StatefulWidget {
   final String personId;

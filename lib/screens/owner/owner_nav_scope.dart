@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import 'owner_section.dart';
 
-/// Lets a CEO screen ask the portal to open another section. The sidebar
+/// Lets an Executive screen ask the portal to open another section. The sidebar
 /// layout switches section; the phone layout switches tab or pushes a page.
 class OwnerNavScope extends InheritedWidget {
   final void Function(BuildContext context, OwnerSection section) onOpen;

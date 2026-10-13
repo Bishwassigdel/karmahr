@@ -29,6 +29,9 @@ enum AuditAction {
   applicantHired,
   employeesImported,
   payViewed,
+  teamCreated,
+  teamUpdated,
+  teamDeleted,
 }
 
 class AuditEntry {
